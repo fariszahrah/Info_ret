@@ -1,0 +1,49 @@
+Index built in:  0.6581449508666992
+Please enter the query terms:going to the store
+Requsted Documents
+Text-188.txt
+Text-345.txt
+total number of ducments returned:  2
+total time to retrieve documents:  0.002270936965942383
+Please enter the query terms:with without yemen
+Requsted Documents
+Text-159.txt
+Text-86.txt
+Text-115.txt
+Text-117.txt
+Text-121.txt
+Text-99.txt
+total number of ducments returned:  6
+total time to retrieve documents:  0.0013549327850341797
+Please enter the query terms:yemeni with
+Requsted Documents
+Text-100.txt
+Text-267.txt
+Text-121.txt
+Text-10.txt
+Text-195.txt
+Text-99.txt
+Text-344.txt
+total number of ducments returned:  7
+total time to retrieve documents:  0.0008521080017089844
+Please enter the query terms:floor table 
+Requsted Documents
+Text-97.txt
+total number of ducments returned:  1
+total time to retrieve documents:  0.0001850128173828125
+Please enter the query terms:window to
+Requsted Documents
+Text-165.txt
+Text-79.txt
+Text-416.txt
+Text-359.txt
+Text-117.txt
+Text-33.txt
+Text-281.txt
+Text-357.txt
+Text-178.txt
+Text-59.txt
+total number of ducments returned:  10
+total time to retrieve documents:  0.0009107589721679688
+Please enter the query terms:
+
