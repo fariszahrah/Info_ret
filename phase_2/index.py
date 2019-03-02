@@ -1,8 +1,9 @@
-#Python 2.7.3
+#Python 3.7
 import re
 import os
 import collections
 import time
+import math
 
 class index:
         #maps term ids to the doc ids and the positions of the term in each document
@@ -29,33 +30,40 @@ class index:
             
             listing = os.listdir(path)
             for infile in range(len(listing)):
+            #for infile in range(100):
                 f = open(path + listing[infile])
                 self.docID[len(self.docID)] = listing[infile] 
                 index = {}
                 m = p.findall(f.read().lower())
                 
                 #this creates the termID dictionary
+                #m = total terms per document
+                #so this forloop iterates through each documents set of words and constructs a termlist
                 for i in range(len(m)):
                     if m[i] in self.termID:
                         ID = self.termID[m[i]]
                     else:
                         ID = len(self.termID)
                         self.termID[m[i]]=len(self.termID)
-                        
+                    #print(m[i])            
                     #makes a posting list per document because modifying tuples is a bitch
                     #so i make them as lists, then I will cast them as I add them to the final list
                     #if they could just be lists, I wouldnt need to do this... AAAAAAAAA
-                    if m[i] in index:
+                    if ID in index:
                         index[ID].append(i)
                     else:
                         index[ID] = [i]
-
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
-                    if i in self.posting_list:
-                        self.posting_list[i].append((len(self.docID),index[i]))
+                    if i in self.posting_list: 
+                        TFID = math.log10(len(listing)/len(self.posting_list[i])-1)
+                        self.posting_list[i][0]=TFID
+                        self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
                     else:
-                        self.posting_list[i]=[(len(self.docID),index[i])]
+                        TFID = math.log10(len(listing))
+                        self.posting_list[i]=[TFID, (len(self.docID),len(index[i]),index[i])]
+
+            
             print('Index built in: ', time.time()-start_time)
             
                 
@@ -175,7 +183,8 @@ class index:
                 print(self.docID[doc])
 
 
-
+#for checking if all TermId's are in the same document
+#for exact searching 
 def is_equal(items):
     count = 0
     for a in terms:
@@ -193,8 +202,14 @@ def is_equal(items):
 
 
 def main():
-    i = index('collection/')
+    ind = './../collection/'
+    i = index(ind) 
+    print('Index being used: %s' %ind)
     i.buildIndex()
+   
+   #debugging
+#    for x in range(0,4):
+#        print(x, i.posting_list[x],'\n\n') 
     while True:
         i.and_query(input('Please enter the query terms:').strip().lower())
     
