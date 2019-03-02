@@ -102,23 +102,24 @@ class index:
             #it also tracks the length of each posting list, to know if we are at the end, and when to break
             term_pointers = {}
             flag = False 
-
             for i in range(len(term_list)):
-                term_pointers[i] = [0,len(term_list[i])-1]
- 
+                term_pointers[i] = [0,len(term_list[i])-2]
+
             #keep going until we reach the end of one of the posting lists        
             while flag is False:
                 counter = 0
+                #modified from phase 1 because the posting list now contains IDF values at the beginning of each
+                #terms posting list.
+                max_doc = term_list[0][term_pointers[0][0]+1][0]
+                print(term_pointers)
                 #compare the values of each pointer
-                max_doc = term_list[0][term_pointers[0][0]][0]
-
                 for a in range(1,len(term_list)):
-                    if term_list[0][term_pointers[0][0]][0] == term_list[a][term_pointers[a][0]][0]:
+                    if term_list[0][term_pointers[0][0]+1][0] == term_list[a][term_pointers[a][0]+1][0]:
                         counter += 1
                 
                 #keeping track of the maximum of the docIDs of the terms
-                    if term_list[a][term_pointers[a][0]][0] > max_doc:
-                        max_doc = term_list[a][term_pointers[a][0]][0]
+                    if term_list[a][term_pointers[a][0]+1][0] > max_doc:
+                        max_doc = term_list[a][term_pointers[a][0]+1][0]
 
                
                 #if the counter is up to n-1, then we have found all of the words
@@ -127,7 +128,7 @@ class index:
                 #we also check if the index is greater than its length, in which case we set the
                 #flag to false to exit the entire while loop
                 if counter == len(term_list)-1:
-                    final_docs.append(term_list[0][term_pointers[0][0]][0]-1)
+                    final_docs.append(term_list[0][term_pointers[0][0]+1][0]-1)
                     
                     for a in term_pointers:
                         term_pointers[a][0] += 1
@@ -141,7 +142,7 @@ class index:
                 else:
                     for a in term_pointers:
                         
-                        if term_list[a][term_pointers[a][0]][0] != max_doc:
+                        if term_list[a][term_pointers[a][0]+1][0] != max_doc:
                             term_pointers[a][0] += 1
                             
                             if term_pointers[a][0] >= term_pointers[a][1]:
