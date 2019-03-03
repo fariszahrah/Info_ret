@@ -5,6 +5,9 @@ import collections
 import time
 import math
 
+from numpy import dot
+from numpy.linalg import norm
+
 class index:
         #maps term ids to the doc ids and the positions of the term in each document
         posting_list = {}
@@ -12,6 +15,13 @@ class index:
         docID = {}
         #maps terms to term ids
         termID = {}
+        
+        #this will contain docIDs as keys
+        #as values will be a list of the terms in the document
+        # and the number of times they appear in the document
+        # it is used for vectorizing docs and queries
+        doc_to_term = {}
+
         
         #words to ignore
         stop_words = set()
@@ -46,6 +56,10 @@ class index:
                 index = {}
                 m = p.findall(f.read().lower())
                 
+                #adding the docID to a doc_to_term dictionary
+                self.doc_to_term[len(self.docID)] = {}
+
+
                 #this creates the termID dictionary
                 #m = total terms per document
                 #so this forloop iterates through each documents set of words and constructs a termlist
@@ -56,7 +70,9 @@ class index:
                         else:
                             ID = len(self.termID)
                             self.termID[m[i]]=len(self.termID)
-                
+                        
+
+
                     #makes a posting list per document because modifying tuples is a bitch
                     #so i make them as lists, then I will cast them as I add them to the final list
                     #if they could just be lists, I wouldnt need to do this... AAAAAAAAA
@@ -67,6 +83,7 @@ class index:
 
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
+                    self.doc_to_term[len(self.docID)][i]=len(index[i])
                     if i in self.posting_list:  
                         self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
                         TFID = math.log10(len(listing)/(len(self.posting_list[i])-1))
@@ -173,11 +190,42 @@ class index:
 
 
 
-#############################################################################
-# helpers
+
 #############################################################################
         
-        #def compute_cosine_sim(self, 
+        def query_to_termID(self,query):
+            for i in query:
+                i = self.termID[i]
+            return query 
+
+
+
+
+        #takes a query,document, and computes the document and query vectors
+        def compute_doc_query_vectors(self, query, docID):
+            query_vector =[]
+            doc_vector=[]
+            for i in self.doc_to_term[docID]:
+                TFIDF = (1+math.log10(self.doc_to_term[docID][i])) * self.posting_list[i][0]
+                doc_vector.append(TFIDF)
+                if i in query:
+                    TFIDF = (self.posting_list[i][0])
+                    query_vector.append(TFIDF)
+                else:
+                    query_vector.append(TFIDF)
+            for i in query:
+                if i not in self.doc_to_term[docID]:
+                    query_vector.append(self.posting_list[i][0])
+                    doc_vector.append(0)
+            return query_vector,doc_vector 
+
+
+        # take two vectors and compute similarities
+        def compute_cosine_sim(self, query_vector,doc_vector):
+            cos_sim = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
+            return cos_sim 
+
+
 
         def remove_stop(self,query):
             to_ret = []
@@ -185,6 +233,9 @@ class index:
                 if i not in self.stop_words:
                     to_ret.append(i)
             return to_ret
+
+
+
 
 
         #function to print the terms and posting list in the index
@@ -208,11 +259,16 @@ class index:
 
 
 
+
+
+
         #print the document names for the specified document ids
         def print_doc_title(self, docs):
             print("Requsted Documents")
             for doc in docs:
                 print(self.docID[doc])
+
+
 
 
 #for checking if all TermId's are in the same document
@@ -242,11 +298,9 @@ def main():
    #debugging
 #    for x in range(0,50):
 #        print(x, i.posting_list[x][:1],len(i.posting_list[x])) 
-    while True:
-        i.and_query(input('Please enter the query terms:').strip().lower())
+#    while True:
+#        i.and_query(input('Please enter the query terms:').strip().lower())
     
-
-
 if __name__ == '__main__':
     main()
 
