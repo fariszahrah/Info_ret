@@ -96,101 +96,16 @@ class index:
             print('Index built in: ', time.time()-start_time)
             
                 
-            
+############################################################################
+
+    # takes a query, computes cosine for all documents with at least one term
+    # which is similar to the query. and returns the documents in a ranked order
+
+    def exact_search(self, query, k):
+
 
 
        
-##########
-# This is an exact AND search
-# all terms must be in document 
-# in order to return document
-##########
-        def and_query(self, query_terms):
-            start_time=time.time()
-            final_docs = []
-            
-            term_list = []
-            
-            #taking the string and parsing into words
-            query_terms = query_terms.split(' ')
-            #print('length of query terms: ' , len(query_terms))
-            
-            #remove stop words
-            query_terms = self.remove_stop(query_terms)
-            
-            #first just retreving the docIDs for each word being searched.
-            #catching if a word is not in the index and telling the user to try again.
-            for i in query_terms:
-                try:
-                    termID = self.termID[i]
-                except KeyError:
-                    termID = False 
-                    print('No matching documents.')
-                    return
-                term_list.append(self.posting_list[termID])
-
-            #now for the list merging. first i am making a dictionary to store pointers
-            #I am going to use as many points as terms i have 
-            #this ditionary 'term_pointers' tracks the index of where in the term poosting list we are.
-            #it also tracks the length of each posting list, to know if we are at the end, and when to break
-            term_pointers = {}
-            flag = False 
-            for i in range(len(term_list)):
-                term_pointers[i] = [0,len(term_list[i])-2]
-
-            #keep going until we reach the end of one of the posting lists        
-            while flag is False:
-                counter = 0
-                #modified from phase 1 because the posting list now contains IDF values at the beginning of each
-                #terms posting list.
-                max_doc = term_list[0][term_pointers[0][0]+1][0]
-                
-                
-                #compare the values of each pointer
-                for a in range(1,len(term_list)):
-                    if term_list[0][term_pointers[0][0]+1][0] == term_list[a][term_pointers[a][0]+1][0]:
-                        counter += 1
-                
-                #keeping track of the maximum of the docIDs of the terms
-                    if term_list[a][term_pointers[a][0]+1][0] > max_doc:
-                        max_doc = term_list[a][term_pointers[a][0]+1][0]
-
-               
-                #if the counter is up to n-1, then we have found all of the words
-                #in the same document, so we add the document to the final list to return
-                #and add 1 to each index.
-                #we also check if the index is greater than its length, in which case we set the
-                #flag to false to exit the entire while loop
-                if counter == len(term_list)-1:
-                    final_docs.append(term_list[0][term_pointers[0][0]+1][0]-1)
-                    
-                    for a in term_pointers:
-                        term_pointers[a][0] += 1
-                        
-                        if term_pointers[a][0] > term_pointers[a][1]:
-                            flag = True
-
-                #if we didnt, then we move all pointers which are not the max, up 1
-                #we also check if the index is greater than its length, in which case we set the
-                #flag to false to exit the entire while loop
-                else:
-                    for a in term_pointers:
-                        
-                        if term_list[a][term_pointers[a][0]+1][0] != max_doc:
-                            term_pointers[a][0] += 1
-                            
-                            if term_pointers[a][0] >= term_pointers[a][1]:
-                                flag = True
-            self.print_doc_title(final_docs)
-
-            
-            print('total number of ducments returned: ', len(final_docs))
-            print('total time to retrieve documents: ',time.time()-start_time)
-
-
-
-
-
 #############################################################################
         
         def query_to_termID(self,query):
