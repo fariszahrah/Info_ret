@@ -4,7 +4,10 @@ phase1 -- basic system, implementing an AND search algo taking any number of wor
 phase2 -- TF-IDF for top K retrieval 
 	-- Cosine similarity, exact search 
 	--inexact search
+	
 	--champions list
+	
 	--cluster pruning
+	
 	--index elimination
 	
