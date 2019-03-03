@@ -12,6 +12,14 @@ class index:
         docID = {}
         #maps terms to term ids
         termID = {}
+        
+        #words to ignore
+        stop_words = set()
+        with open('stop-list.txt','r') as f:
+            for line in f:
+                 for word in line.split():
+                     stop_words.add(word)
+
 
         def __init__(self,path):
             self.path = path
@@ -20,7 +28,8 @@ class index:
 	    #function to read documents from collection, tokenize and build the index with tokens
 	    #index should also contain positional information of the terms in the document --- term: [(ID1,[pos1,pos2,..]), (ID2, [pos1,pos2,…]),….]
 	    #use unique document IDs
-            
+            #ignore stop words 
+
             path = self.path
             #just for timing
             start_time = time.time()
@@ -29,8 +38,9 @@ class index:
             p = re.compile('[a-z]+',re.IGNORECASE)
             
             listing = os.listdir(path)
+            print('total number of documents: %d'%len(listing))
             for infile in range(len(listing)):
-            #for infile in range(100):
+            #for infile in range(1):
                 f = open(path + listing[infile])
                 self.docID[len(self.docID)] = listing[infile] 
                 index = {}
@@ -40,25 +50,27 @@ class index:
                 #m = total terms per document
                 #so this forloop iterates through each documents set of words and constructs a termlist
                 for i in range(len(m)):
-                    if m[i] in self.termID:
-                        ID = self.termID[m[i]]
-                    else:
-                        ID = len(self.termID)
-                        self.termID[m[i]]=len(self.termID)
-                    #print(m[i])            
+                    if m[i] not in self.stop_words:
+                        if m[i] in self.termID:
+                            ID = self.termID[m[i]]
+                        else:
+                            ID = len(self.termID)
+                            self.termID[m[i]]=len(self.termID)
+                
                     #makes a posting list per document because modifying tuples is a bitch
                     #so i make them as lists, then I will cast them as I add them to the final list
                     #if they could just be lists, I wouldnt need to do this... AAAAAAAAA
-                    if ID in index:
-                        index[ID].append(i)
-                    else:
-                        index[ID] = [i]
+                        if ID in index:
+                            index[ID].append(i)
+                        else:
+                            index[ID] = [i]
+
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
-                    if i in self.posting_list: 
-                        TFID = math.log10(len(listing)/len(self.posting_list[i])-1)
-                        self.posting_list[i][0]=TFID
+                    if i in self.posting_list:  
                         self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
+                        TFID = math.log10(len(listing)/(len(self.posting_list[i])-1))
+                        self.posting_list[i][0]=TFID
                     else:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID),len(index[i]),index[i])]
@@ -70,8 +82,12 @@ class index:
             
 
 
-        #function for identifying relevant docs using the index
-        
+       
+##########
+# This is an exact AND search
+# all terms must be in document 
+# in order to return document
+##########
         def and_query(self, query_terms):
             start_time=time.time()
             final_docs = []
@@ -81,7 +97,10 @@ class index:
             #taking the string and parsing into words
             query_terms = query_terms.split(' ')
             #print('length of query terms: ' , len(query_terms))
-
+            
+            #remove stop words
+            query_terms = self.remove_stop(query_terms)
+            
             #first just retreving the docIDs for each word being searched.
             #catching if a word is not in the index and telling the user to try again.
             for i in query_terms:
@@ -92,9 +111,6 @@ class index:
                     print('No matching documents.')
                     return
                 term_list.append(self.posting_list[termID])
-          ##########  for i in term_list:
-          ##########print(i, self.docID[i][0])
-
 
             #now for the list merging. first i am making a dictionary to store pointers
             #I am going to use as many points as terms i have 
@@ -111,7 +127,8 @@ class index:
                 #modified from phase 1 because the posting list now contains IDF values at the beginning of each
                 #terms posting list.
                 max_doc = term_list[0][term_pointers[0][0]+1][0]
-                print(term_pointers)
+                
+                
                 #compare the values of each pointer
                 for a in range(1,len(term_list)):
                     if term_list[0][term_pointers[0][0]+1][0] == term_list[a][term_pointers[a][0]+1][0]:
@@ -156,6 +173,20 @@ class index:
 
 
 
+#############################################################################
+# helpers
+#############################################################################
+        
+        #def compute_cosine_sim(self, 
+
+        def remove_stop(self,query):
+            to_ret = []
+            for i in query:
+                if i not in self.stop_words:
+                    to_ret.append(i)
+            return to_ret
+
+
         #function to print the terms and posting list in the index
         def print_dict(self):
             start_time = time.time()
@@ -169,7 +200,7 @@ class index:
 
 
 
-	# function to print the documents and their document id
+	#print all documents and their document id
         def print_doc_list(self):
             for row in self.docID:
                 print(row, self.docID[row])
@@ -177,7 +208,7 @@ class index:
 
 
 
-        #printing the document names for the specified document ids
+        #print the document names for the specified document ids
         def print_doc_title(self, docs):
             print("Requsted Documents")
             for doc in docs:
@@ -209,8 +240,8 @@ def main():
     i.buildIndex()
    
    #debugging
-#    for x in range(0,4):
-#        print(x, i.posting_list[x],'\n\n') 
+#    for x in range(0,50):
+#        print(x, i.posting_list[x][:1],len(i.posting_list[x])) 
     while True:
         i.and_query(input('Please enter the query terms:').strip().lower())
     
