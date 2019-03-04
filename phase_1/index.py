@@ -95,7 +95,6 @@ class index:
             #it also tracks the length of each posting list, to know if we are at the end, and when to break
             term_pointers = {}
             flag = False 
-
             for i in range(len(term_list)):
                 term_pointers[i] = [0,len(term_list[i])-1]
  
@@ -196,8 +195,8 @@ def is_equal(items):
 def main():
     i = index('./../collection/')
     i.buildIndex()
-    for x in range(10,15):
-        print(x, i.posting_list[x],'\n\n')
+#    for x in range(10,15):
+#        print(x, i.posting_list[x],'\n\n')
     while True:
         i.and_query(input('Please enter the query terms:').strip().lower())
     
