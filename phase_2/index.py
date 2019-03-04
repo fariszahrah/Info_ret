@@ -111,7 +111,7 @@ class index:
 
                 
             self.compute_champions_list(10)
-            print('Index built in: ', time.time()-start_time)
+            print('Index built in: ', round(time.time()-start_time,4))
             
         
 
@@ -121,6 +121,61 @@ class index:
 
 ##############################
 
+
+    # Main Inexact Search Function
+        def inexact_search(self,query, k=10):
+            
+            query = self.remove_stop(query)
+            query = self.query_to_termID(query)
+            
+            start_time = time.time()
+            
+            #champions list section
+            docs_to_score = set()
+            for termID in query:
+                for doc in self.champions_list[termID]:
+                    docs_to_score.add(doc)
+    
+            scores0 = self.score_documents(query,docs_to_score,k)
+            if len(scores0) == 0:
+                print('\nSorry we didnt find any similar documents :(\n')
+            else:
+                print('Champions List Results')
+                for i in range(len(scores0)):
+                    print(self.docID[scores0[i][1]])
+                print('Time taken to retrieve query results using the Champions List: ', round(time.time()-start_time,4))
+            
+            
+            start_time = time.time()
+            
+            #Index Elimination Section
+            query = self.index_elimination(query)
+            docs_to_score = set()
+            for termID in query:
+                for doc in self.posting_list[termID]:
+                     if type(doc) == tuple:
+                        docs_to_score.add(doc[0])
+                    
+            scores1 = self.score_documents(query,docs_to_score,k)
+            if len(scores1) == 0:
+                print('\nSorry we didnt find any similar documents :(\n')
+            else:
+                print('Index Elimination Results')
+                for i in range(len(scores1)):
+                    print(self.docID[scores1[i][1]])
+                print('Time taken to retrieve query results using Index Elimination without the Champions list: ',round(time.time()-start_time,4))
+  
+
+            return scores0, scores1
+        
+
+
+
+
+
+
+
+#############################
     # CHAMPIONS LIST
 
     # compute champions list, I am serperating this from the index building based
@@ -146,7 +201,7 @@ class index:
                             potential_docs.append((doc[0],doc[1]))
                     potential_docs = sorted(potential_docs, key=lambda k:(-k[1],k[0]))
                     for doc in potential_docs:
-                        docs_to_add.append(doc)
+                        docs_to_add.append(doc[0])
                     self.champions_list[term] = docs_to_add[:k]
                     
 
@@ -156,13 +211,29 @@ class index:
 
     # take round(number of query terms / 2) and only use these for searching
     # choose the query words based on IDF vales. (use the rare half of the words)
+        
+        def index_elimination(self,query):
+            term_idf = []
+            for term in query:
+                term_idf.append((term,self.posting_list[term][0]))
+            
+            term_idf = sorted(term_idf, key=lambda k:(-k[1],k[0]))
+            terms_to_search = []
+            print('!!!!!!!!!!!!!!',math.ceil(len(query)/2)) 
+            for i in range(math.ceil(len(query)/2)):
+                terms_to_search.append(term_idf[i][0])
+            return terms_to_search
+
+#############################
+
+    # SIMPLE CLUSTER PRUNING
 
 
 
 
 
 
-##############################
+#############################
 
 # EXACT SEARCH
 
@@ -190,21 +261,14 @@ class index:
                     if type(doc) == tuple:
                         docs_to_score.add(doc[0])
         
-            # compute score for each doc
-            for docID in docs_to_score:
-                query_vector, doc_vector = self.compute_doc_query_vectors(query,docID)
-                score = self.compute_cosine_sim(query_vector,doc_vector)
-                scores.append((score,docID))
-
-            #sort and return top k docs
-            scores = sorted(scores, key=lambda k:(-k[0],k[1]))
+            scores = self.score_documents(query,docs_to_score,k)
 
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
                 for i in range(min(k,len(scores))):
                     print(self.docID[scores[i][1]])
-                print('Time taken to retrieve query resulty: ', time.time()-start_time)
+                print('Time taken to retrieve query results from Exact Search: ', round(time.time()-start_time,4))
             return scores[:k]
         
 
@@ -245,6 +309,20 @@ class index:
         def compute_cosine_sim(self, query_vector, doc_vector):
             cos_sim = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
             return cos_sim 
+
+
+        # take a query and a list of docs, and return top k
+        def score_documents(self, query, docs_to_score, k):
+            scores = []
+            # compute score for each doc
+            for docID in docs_to_score:
+                query_vector, doc_vector = self.compute_doc_query_vectors(query,docID)
+                score = self.compute_cosine_sim(query_vector,doc_vector)
+                scores.append((score,docID))
+
+            #sort and return top k docs
+            scores = sorted(scores, key=lambda x:(-x[0],x[1]))
+            return scores[:k]
 
 
 
@@ -338,16 +416,17 @@ def main():
         if(len(i.posting_list[x]) ==2):
             print(x, i.posting_list[x],len(i.posting_list[x])) 
     '''
-    
+   
+    '''
     i.examine_champions_list()
     for x in range(0,40):
         print(i.champions_list[x])
-   
-   
+    '''
+
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
-        docs = i.exact_search(query,5)
-
+        docs0 = i.exact_search(query,5)
+        docs1,doc2 = i.inexact_search(query,5)
 if __name__ == '__main__':
     main()
 
