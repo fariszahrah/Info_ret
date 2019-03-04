@@ -100,18 +100,53 @@ class index:
 
     # takes a query, computes cosine for all documents with at least one term
     # which is similar to the query. and returns the documents in a ranked order
-
-    def exact_search(self, query, k):
+    
+    # currently the scores and documents associated with each score is only stored 
+    # in a list and then sorted based on score, this is inefficient and should be
+    # a tree structure to reduce sort/retrieval complexity
+        def exact_search(self, query, k):
+            docs_to_score = set()
+            scores = [] 
+            if len(query) ==0:
+                print('No documents with any words related, sorry:(')
+                return
+            query = self.remove_stop(query)
+            query = self.query_to_termID(query)
+            print(query)
+            # obtain docs to score
+            for termID in query:
+                for doc in self.posting_list[termID]:
+                    if type(doc) == tuple:
+                        docs_to_score.add(doc[0])
+        
+            # compute score for each doc
+            for docID in docs_to_score:
+                query_vector, doc_vector = self.compute_doc_query_vectors(query,docID)
+                if docID == 1:
+                    print(query_vector,'\n\n', doc_vector)
+                score = self.compute_cosine_sim(query_vector,doc_vector)
+                scores.append((score,docID))
+        
+            #sort and return top k docs
+            scores = sorted(scores, key=lambda k:(-k[0],k[1]))
+            return scores[:k]
+        
 
 
 
        
 #############################################################################
         
+        
         def query_to_termID(self,query):
+            ID_query=[]
             for i in query:
-                i = self.termID[i]
-            return query 
+                try:
+                    ID_query.append(self.termID[i])
+                except:
+                    pass
+            
+            return ID_query
 
 
 
@@ -127,7 +162,7 @@ class index:
                     TFIDF = (self.posting_list[i][0])
                     query_vector.append(TFIDF)
                 else:
-                    query_vector.append(TFIDF)
+                    query_vector.append(0)
             for i in query:
                 if i not in self.doc_to_term[docID]:
                     query_vector.append(self.posting_list[i][0])
@@ -135,8 +170,10 @@ class index:
             return query_vector,doc_vector 
 
 
+
+
         # take two vectors and compute similarities
-        def compute_cosine_sim(self, query_vector,doc_vector):
+        def compute_cosine_sim(self, query_vector, doc_vector):
             cos_sim = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
             return cos_sim 
 
@@ -184,6 +221,7 @@ class index:
                 print(self.docID[doc])
 
 
+        
 
 
 #for checking if all TermId's are in the same document
@@ -211,11 +249,19 @@ def main():
     i.buildIndex()
    
    #debugging
-#    for x in range(0,50):
-#        print(x, i.posting_list[x][:1],len(i.posting_list[x])) 
-#    while True:
-#        i.and_query(input('Please enter the query terms:').strip().lower())
+    '''
+    for x in range(0,100):
+        if(len(i.posting_list[x]) ==2):
+            print(x, i.posting_list[x],len(i.posting_list[x])) 
+    '''
     
+    while True:
+        query = (input('Please enter the query terms:').strip().lower()).split(' ')
+        docs = i.exact_search(query,5)
+        if len(docs) > 0:
+            print(docs)
+    
+
 if __name__ == '__main__':
     main()
 
