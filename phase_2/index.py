@@ -4,6 +4,7 @@ import os
 import collections
 import time
 import math
+import random
 
 from numpy import dot
 from numpy.linalg import norm
@@ -27,6 +28,8 @@ class index:
         # I choose how it is made 
         champions_list = {}
 
+        # this maintains the list of leaders and their followers
+        pruning_clusters = {}
 
 
         #words to ignore
@@ -63,8 +66,7 @@ class index:
                 m = p.findall(f.read().lower())
                 
                 #adding the docID to a doc_to_term dictionary
-                self.doc_to_term[len(self.docID)] = {}
-
+                self.doc_to_term[len(self.docID)-1] = {}
 
                 #this creates the termID dictionary
                 #m = total terms per document
@@ -100,7 +102,7 @@ class index:
                         else:
                             self.champions_list[i] = [len(self.docID)]
                     '''
-                    self.doc_to_term[len(self.docID)][i]=len(index[i])
+                    self.doc_to_term[len(self.docID)-1][i]=len(index[i])
                     if i in self.posting_list:  
                         self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
                         TFID = math.log10(len(listing)/(len(self.posting_list[i])-1))
@@ -109,12 +111,48 @@ class index:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID),len(index[i]),index[i])]
 
-                
             self.compute_champions_list(10)
+            self.build_pruning_clusters()
+            print(len(self.pruning_clusters))
             print('Index built in: ', round(time.time()-start_time,4))
-            
-        
+ 
 
+
+
+#############################
+    # CHAMPIONS LIST
+
+    # compute champions list, I am serperating this from the index building based
+    # on the idea that I need the complete posting list to create an effective 
+    # champions list.
+
+    # This is only to be computed once, upon index construction. Then it is accessed 
+    # for every term in our query
+
+    # I can totally reduce index contruction time complexity by doing this with a tree
+    # and by doing this while the posting list is being built.  this will jsut act as
+    # a proof of concept/fast testing and then i will impliment a bettter version.
+        def compute_champions_list(self, k):
+            for term in self.posting_list:
+                docs_to_add = []
+                if len(self.posting_list[term]) < k+1:
+                    for doc in self.posting_list[term]:
+                        if type(doc) == tuple:
+                            docs_to_add.append(doc[0])
+                    self.champions_list[term] = docs_to_add
+                
+                else:
+                    potential_docs=[]
+                    for doc in self.posting_list[term]:
+                        if type(doc) == tuple:
+                            potential_docs.append((doc[0],doc[1]))
+                    potential_docs = sorted(potential_docs, key=lambda k:(-k[1],k[0]))
+                    for doc in potential_docs:
+                        docs_to_add.append(doc[0])
+                    self.champions_list[term] = docs_to_add[:k]
+                    
+   
+        
 ##############################
         
 # INEXACT SEARCHES 
@@ -149,7 +187,7 @@ class index:
             start_time = time.time()
             
             #Index Elimination Section
-            query = self.index_elimination(query)
+            query = self.index_elimination(query, 1/2)
             docs_to_score = set()
             for termID in query:
                 for doc in self.posting_list[termID]:
@@ -171,40 +209,6 @@ class index:
 
 
 
-
-
-
-
-#############################
-    # CHAMPIONS LIST
-
-    # compute champions list, I am serperating this from the index building based
-    # on the idea that I need the complete posting list to create an effective 
-    # champions list.
-
-    # I can totally reduce index contruction time complexity by doing this with a tree
-    # and by doing this while the posting list is being built.  this will jsut act as
-    # a proof of concept/fast testing and then i will impliment a bettter version.
-        def compute_champions_list(self, k):
-            for term in self.posting_list:
-                docs_to_add = []
-                if len(self.posting_list[term]) < k+1:
-                    for doc in self.posting_list[term]:
-                        if type(doc) == tuple:
-                            docs_to_add.append(doc[0])
-                    self.champions_list[term] = docs_to_add
-                
-                else:
-                    potential_docs=[]
-                    for doc in self.posting_list[term]:
-                        if type(doc) == tuple:
-                            potential_docs.append((doc[0],doc[1]))
-                    potential_docs = sorted(potential_docs, key=lambda k:(-k[1],k[0]))
-                    for doc in potential_docs:
-                        docs_to_add.append(doc[0])
-                    self.champions_list[term] = docs_to_add[:k]
-                    
-
 #############################
 
     # INDEX ELIMINATION
@@ -212,24 +216,59 @@ class index:
     # take round(number of query terms / 2) and only use these for searching
     # choose the query words based on IDF vales. (use the rare half of the words)
         
-        def index_elimination(self,query):
+        def index_elimination(self,query, fraction):
             term_idf = []
+            fraction = 1 - fraction
+            fraction = 1 / fraction
             for term in query:
                 term_idf.append((term,self.posting_list[term][0]))
             
             term_idf = sorted(term_idf, key=lambda k:(-k[1],k[0]))
             terms_to_search = []
-            print('!!!!!!!!!!!!!!',math.ceil(len(query)/2)) 
-            for i in range(math.ceil(len(query)/2)):
+            
+            for i in range(math.ceil(len(query)/fraction)):
                 terms_to_search.append(term_idf[i][0])
+            # print(terms_to_search)
             return terms_to_search
 
 #############################
 
     # SIMPLE CLUSTER PRUNING
+    # FUCK THIS IS GOING TO BE EXPENSIVE
+    # 
+        
+        
+        def build_pruning_clusters(self):
+            
+            path = self.path
+            listing = os.listdir(path)
+            total_leaders = math.ceil(math.sqrt(len(listing)))
+            leaders = random.sample(range(len(listing)),total_leaders)
+            followers = list(set(range(len(listing))) - set(leaders))
+        #compute vectors for all docs
+            for follower in followers:
+            #for follower in range(1):
+                scores = []
+                for leader in leaders:
+                    follower_vector, leader_vector = self.doc_doc_vectors(follower,leader)
+                    cosin_score = self.compute_cosine_sim(follower_vector,leader_vector)
+                    scores.append(cosin_score)
+                
+                max_score = scores[0]
+                max_score_doc = 0
+                for score in range(len(scores)):
+                    if scores[score] > max_score:
+                        max_score = scores[score]
+                        max_score_doc = score 
 
-# todo .......
+                if leaders[max_score_doc] in self.pruning_clusters:
+                    self.pruning_clusters[leaders[max_score_doc]].append(follower)
+                else:
+                    self.pruning_clusters[leaders[max_score_doc]]=[follower]
+                    
 
+
+    
 
 
 
@@ -285,6 +324,31 @@ class index:
                     pass
             
             return ID_query 
+        
+        
+
+        def doc_doc_vectors(self, doc0, doc1):
+            doc0_vector = []
+            doc1_vector = []
+            doc1_copy = self.doc_to_term[doc1]
+            for term in self.doc_to_term[doc0]:
+                Wtf = 1 + math.log10(self.doc_to_term[doc0][term])
+                doc0_vector.append(Wtf * self.posting_list[term][0])
+
+                if term in doc1_copy:
+                    Wtf = 1 + math.log10(doc1_copy[term])
+                    doc1_vector.append(Wtf * self.posting_list[term][0])
+                    del doc1_copy[term]
+                else:
+                    doc1_vector.append(0)
+            for term in doc1_copy:
+                Wtf = 1 + math.log10(doc1_copy[term])
+                doc1_vector.append(Wtf * self.posting_list[term][0])
+                doc0_vector.append(0)
+
+            return doc0_vector, doc1_vector 
+
+                
 
         #takes a query,document, and computes the document and query vectors
         def compute_doc_query_vectors(self, query, docID):
@@ -305,10 +369,12 @@ class index:
             return query_vector,doc_vector 
 
 
+
         # take two vectors and compute similarities
         def compute_cosine_sim(self, query_vector, doc_vector):
             cos_sim = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
             return cos_sim 
+
 
 
         # take a query and a list of docs, and return top k
@@ -365,7 +431,9 @@ class index:
 
 
 ###########################
-    
+
+        # For data examination and analysis of the Champions list
+
         def examine_champions_list(self):
             information = []
             count = 0
@@ -423,10 +491,16 @@ def main():
         print(i.champions_list[x])
     '''
 
+    '''
+    for x in range(1,3):
+        print(i.doc_to_term[x])
+    '''
+
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
-        docs0 = i.exact_search(query,5)
-        docs1,doc2 = i.inexact_search(query,5)
+       # docs0 = i.exact_search(query,10)
+       # print(docs0)
+       # docs1,doc2 = i.inexact_search(query,5)
 if __name__ == '__main__':
     main()
 
