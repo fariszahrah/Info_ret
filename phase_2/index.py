@@ -7,6 +7,7 @@ import math
 
 from numpy import dot
 from numpy.linalg import norm
+import numpy as np 
 
 class index:
         #maps term ids to the doc ids and the positions of the term in each document
@@ -22,10 +23,15 @@ class index:
         # it is used for vectorizing docs and queries
         doc_to_term = {}
 
-        
+        # Ranks the top documents per word, based on frequency 
+        # I choose how it is made 
+        champions_list = {}
+
+
+
         #words to ignore
         stop_words = set()
-        with open('stop-list.txt','r') as f:
+        with open('./../stop-list.txt','r') as f:
             for line in f:
                  for word in line.split():
                      stop_words.add(word)
@@ -83,6 +89,17 @@ class index:
 
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
+                    
+                    '''
+                    # champions list stuff, attempt 1
+                    # so far this is not working lol
+
+                    if (len(index[i])/len(index)) > .01:
+                        if i in self.champions_list:
+                            self.champions_list[i].append(len(self.docID))
+                        else:
+                            self.champions_list[i] = [len(self.docID)]
+                    '''
                     self.doc_to_term[len(self.docID)][i]=len(index[i])
                     if i in self.posting_list:  
                         self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
@@ -92,13 +109,64 @@ class index:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID),len(index[i]),index[i])]
 
-            
+                
+            self.compute_champions_list(10)
             print('Index built in: ', time.time()-start_time)
             
-                
+        
+
+##############################
+        
+# INEXACT SEARCHES 
 
 ##############################
 
+    # CHAMPIONS LIST
+
+    # compute champions list, I am serperating this from the index building based
+    # on the idea that I need the complete posting list to create an effective 
+    # champions list.
+
+    # I can totally reduce index contruction time complexity by doing this with a tree
+    # and by doing this while the posting list is being built.  this will jsut act as
+    # a proof of concept/fast testing and then i will impliment a bettter version.
+        def compute_champions_list(self, k):
+            for term in self.posting_list:
+                docs_to_add = []
+                if len(self.posting_list[term]) < k+1:
+                    for doc in self.posting_list[term]:
+                        if type(doc) == tuple:
+                            docs_to_add.append(doc[0])
+                    self.champions_list[term] = docs_to_add
+                
+                else:
+                    potential_docs=[]
+                    for doc in self.posting_list[term]:
+                        if type(doc) == tuple:
+                            potential_docs.append((doc[0],doc[1]))
+                    potential_docs = sorted(potential_docs, key=lambda k:(-k[1],k[0]))
+                    for doc in potential_docs:
+                        docs_to_add.append(doc)
+                    self.champions_list[term] = docs_to_add[:k]
+                    
+
+#############################
+
+    # INDEX ELIMINATION
+
+    # take round(number of query terms / 2) and only use these for searching
+    # choose the query words based on IDF vales. (use the rare half of the words)
+
+
+
+
+
+
+##############################
+
+# EXACT SEARCH
+
+#############################
 
     # takes a query, computes cosine for all documents with at least one term
     # which is similar to the query. and returns the documents in a ranked order
@@ -140,9 +208,10 @@ class index:
             return scores[:k]
         
 
-##############################
-        
-        
+
+##############################        
+
+
         def query_to_termID(self,query):
             ID_query=[]
             for i in query:
@@ -151,10 +220,7 @@ class index:
                 except:
                     pass
             
-            return ID_query
-
-
-
+            return ID_query 
 
         #takes a query,document, and computes the document and query vectors
         def compute_doc_query_vectors(self, query, docID):
@@ -175,14 +241,14 @@ class index:
             return query_vector,doc_vector 
 
 
-
-
         # take two vectors and compute similarities
         def compute_cosine_sim(self, query_vector, doc_vector):
             cos_sim = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
             return cos_sim 
 
 
+
+############################
 
         def remove_stop(self,query):
             to_ret = []
@@ -192,8 +258,7 @@ class index:
             return to_ret
 
 
-
-
+###########################
 
         #function to print the terms and posting list in the index
         def print_dict(self):
@@ -206,16 +271,10 @@ class index:
 
 
 
-
-
 	#print all documents and their document id
         def print_doc_list(self):
             for row in self.docID:
                 print(row, self.docID[row])
-
-
-
-
 
 
 
@@ -225,6 +284,26 @@ class index:
             for doc in docs:
                 print(self.docID[doc])
 
+
+
+###########################
+    
+        def examine_champions_list(self):
+            information = []
+            count = 0
+            for i in self.champions_list:
+                count += len(self.champions_list[i])
+                information.append(len(self.champions_list[i]))
+            data = np.array(information) 
+            hist,bins=np.histogram(data)
+            print('champions list length: ',len(self.champions_list))
+            print('total docs in champions list(with overlap): ',count)
+            print('average champions list length: %d' % (count/len(self.champions_list)))
+            print('Variance of the champions list results: ',np.var(information))
+            print('max length of champions list: ', max(information))
+
+
+##########################
 
         
 
@@ -260,6 +339,11 @@ def main():
             print(x, i.posting_list[x],len(i.posting_list[x])) 
     '''
     
+    i.examine_champions_list()
+    for x in range(0,40):
+        print(i.champions_list[x])
+   
+   
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs = i.exact_search(query,5)
