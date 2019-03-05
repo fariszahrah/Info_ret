@@ -25,7 +25,6 @@ class index:
         doc_to_term = {}
 
         # Ranks the top documents per word, based on frequency 
-        # I choose how it is made 
         champions_list = {}
 
         # this maintains the list of leaders and their followers
@@ -102,7 +101,7 @@ class index:
                         self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
 
             self.compute_champions_list(15)
-            self.build_pruning_clusters(3)
+            self.build_pruning_clusters(2)
 
             print('Index built in: ', round(time.time()-start_time,4))
  
@@ -140,7 +139,24 @@ class index:
                     for doc in potential_docs:
                         docs_to_add.append(doc[0])
                     self.champions_list[term] = docs_to_add[:k]
-                    
+        
+        def search_champions_list(self, query, k):
+            
+            start_time = time.time()
+            docs_to_score = set()
+            for termID in query:
+                for doc in self.champions_list[termID]:
+                    docs_to_score.add(doc)
+    
+            scores = self.score_documents(query,docs_to_score,k)
+            if len(scores) == 0:
+                print('\nSorry we didnt find any similar documents :(\n')
+            else:
+                print('\nChampions List Results')
+                for i in range(len(scores)):
+                    print(self.docID[scores[i][1]])
+                print('Champions List Retrieval time: ', round(time.time()-start_time,4))
+            return scores 
    
         
 ##############################
@@ -156,43 +172,13 @@ class index:
             query = self.remove_stop(query)
             query = self.query_to_termID(query)
             
-            start_time = time.time()
+            #Champions List 
+            scores0 = self.search_champions_list(query,k)
             
-            #champions list section
-            docs_to_score = set()
-            for termID in query:
-                for doc in self.champions_list[termID]:
-                    docs_to_score.add(doc)
-    
-            scores0 = self.score_documents(query,docs_to_score,k)
-            if len(scores0) == 0:
-                print('\nSorry we didnt find any similar documents :(\n')
-            else:
-                print('\nChampions List Results')
-                for i in range(len(scores0)):
-                    print(self.docID[scores0[i][1]])
-                print('Champions List Retrieval time: ', round(time.time()-start_time,4))
+            #Index Elimination
+            scores1 = self.saerch_index_elimination(query)
             
             
-            start_time = time.time()
-            
-            #Index Elimination Section
-            query = self.index_elimination(query, 1/2)
-            docs_to_score = set()
-            for termID in query:
-                for doc in self.posting_list[termID]:
-                     if type(doc) == tuple:
-                        docs_to_score.add(doc[0])
-                    
-            scores1 = self.score_documents(query,docs_to_score,k)
-            if len(scores1) == 0:
-                print('\nSorry we didnt find any similar documents :(\n')
-            else:
-                print('\nIndex Elimination Results')
-                for i in range(len(scores1)):
-                    print(self.docID[scores1[i][1]])
-                print('Index Elimination w/o Champions list Retrieval time: ',round(time.time()-start_time,4))
-  
             #Cluster Pruning 
             scores2 = self.search_clusters(query,k)
 
@@ -208,7 +194,7 @@ class index:
     # take round(number of query terms / 2) and only use these for searching
     # choose the query words based on IDF vales. (use the rare half of the words)
         
-        def index_elimination(self,query, fraction= 1.0/2.0):
+        def index_elimination(self,query, fraction = 0.5):
             term_idf = []
             fraction = 1 - fraction
             fraction = 1 / fraction
@@ -224,6 +210,27 @@ class index:
             return terms_to_search
 
 
+############################
+        
+        #searching index elimination
+        def saerch_index_elimination(self, query, fraction = 0.5):
+            start_time = time.time()
+            query = self.index_elimination(query)
+            docs_to_score = set()
+            for termID in query:
+                for doc in self.posting_list[termId]:
+                    if type(doc) == tuple:
+                        docs_to_score.add(doc[0])
+
+            scores = self.score_documents(query,docs_to_score,k)
+            if len(scores) == 0:
+                print('\nSorry we didnt find any similar documents :(\n')
+            else:
+                print('\nIndex Elimination Results')
+                for i in range(len(scores)):
+                    print(self.docID[scores[i][1]])
+                print('Index Elimination w/o Champions list Retrieval time: ',round(time.time()-start_time,4))
+            return scores 
         
 
 #############################
