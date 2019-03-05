@@ -92,28 +92,18 @@ class index:
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
                     
-                    '''
-                    # champions list stuff, attempt 1
-                    # so far this is not working lol
-
-                    if (len(index[i])/len(index)) > .01:
-                        if i in self.champions_list:
-                            self.champions_list[i].append(len(self.docID))
-                        else:
-                            self.champions_list[i] = [len(self.docID)]
-                    '''
                     self.doc_to_term[len(self.docID)-1][i]=len(index[i])
                     if i in self.posting_list:  
-                        self.posting_list[i].append((len(self.docID),len(index[i]) ,index[i]))
+                        self.posting_list[i].append((len(self.docID)-1,len(index[i]) ,index[i]))
                         TFID = math.log10(len(listing)/(len(self.posting_list[i])-1))
                         self.posting_list[i][0]=TFID
                     else:
                         TFID = math.log10(len(listing))
-                        self.posting_list[i]=[TFID, (len(self.docID),len(index[i]),index[i])]
+                        self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
 
-            self.compute_champions_list(10)
-            self.build_pruning_clusters()
-            print(len(self.pruning_clusters))
+            self.compute_champions_list(15)
+            self.build_pruning_clusters(3)
+
             print('Index built in: ', round(time.time()-start_time,4))
  
 
@@ -178,10 +168,10 @@ class index:
             if len(scores0) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
-                print('Champions List Results')
+                print('\nChampions List Results')
                 for i in range(len(scores0)):
                     print(self.docID[scores0[i][1]])
-                print('Time taken to retrieve query results using the Champions List: ', round(time.time()-start_time,4))
+                print('Champions List Retrieval time: ', round(time.time()-start_time,4))
             
             
             start_time = time.time()
@@ -198,13 +188,15 @@ class index:
             if len(scores1) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
-                print('Index Elimination Results')
+                print('\nIndex Elimination Results')
                 for i in range(len(scores1)):
                     print(self.docID[scores1[i][1]])
-                print('Time taken to retrieve query results using Index Elimination without the Champions list: ',round(time.time()-start_time,4))
+                print('Index Elimination w/o Champions list Retrieval time: ',round(time.time()-start_time,4))
   
+            #Cluster Pruning 
+            scores2 = self.search_clusters(query,k)
 
-            return scores0, scores1
+            return scores0, scores1, scores2 
         
 
 
@@ -216,7 +208,7 @@ class index:
     # take round(number of query terms / 2) and only use these for searching
     # choose the query words based on IDF vales. (use the rare half of the words)
         
-        def index_elimination(self,query, fraction):
+        def index_elimination(self,query, fraction= 1.0/2.0):
             term_idf = []
             fraction = 1 - fraction
             fraction = 1 / fraction
@@ -231,6 +223,9 @@ class index:
             # print(terms_to_search)
             return terms_to_search
 
+
+        
+
 #############################
 
     # SIMPLE CLUSTER PRUNING
@@ -238,7 +233,7 @@ class index:
     # 
         
         
-        def build_pruning_clusters(self):
+        def build_pruning_clusters(self, nearest_leaders =2):
             
             path = self.path
             listing = os.listdir(path)
@@ -252,23 +247,47 @@ class index:
                 for leader in leaders:
                     follower_vector, leader_vector = self.doc_doc_vectors(follower,leader)
                     cosin_score = self.compute_cosine_sim(follower_vector,leader_vector)
-                    scores.append(cosin_score)
-                
-                max_score = scores[0]
-                max_score_doc = 0
-                for score in range(len(scores)):
-                    if scores[score] > max_score:
-                        max_score = scores[score]
-                        max_score_doc = score 
-
-                if leaders[max_score_doc] in self.pruning_clusters:
-                    self.pruning_clusters[leaders[max_score_doc]].append(follower)
-                else:
-                    self.pruning_clusters[leaders[max_score_doc]]=[follower]
+                    scores.append((cosin_score,leader))
+               
+                scores = sorted(scores, key=lambda k:(-k[0],k[1]))
+                for i in range(nearest_leaders):
+                    if scores[i][1] in self.pruning_clusters:
+                        self.pruning_clusters[scores[i][1]].append(follower)
+                    else:
+                        self.pruning_clusters[scores[i][1]]=[follower]
                     
 
+#############################
 
-    
+
+        # using the query, search the most similar 
+        def search_clusters(self, query, k):
+            start_time = time.time()
+            leader_score = []
+            for leader in self.pruning_clusters:
+                query_vector, leader_vector = self.compute_doc_query_vectors(query, leader)
+                cosine_sim = self.compute_cosine_sim(query_vector, leader_vector)
+                leader_score.append((cosine_sim,leader))
+
+            leader_score = sorted(leader_score, key=lambda x:(-x[0],x[1]))
+            docs_to_score = []
+            for leader in leader_score:
+                if len(docs_to_score) < k:
+                    docs_to_score.extend(self.pruning_clusters[leader[1]])
+                else:
+                    break
+            
+            scores = self.score_documents(query, docs_to_score, k)
+            if len(scores) == 0:
+                print('\nSorry we didnt find any similar documents :(\n')
+            else:
+                print('\nCluster Pruning Results')
+                for i in range(len(scores)):
+                    print(self.docID[scores[i][1]])
+                print('Time taken to retrieve query results using Cluster Pruning:',round(time.time()-start_time,4))
+ 
+            return scores 
+
 
 
 
@@ -305,6 +324,7 @@ class index:
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
+                print('\nExact Search Results:')
                 for i in range(min(k,len(scores))):
                     print(self.docID[scores[i][1]])
                 print('Time taken to retrieve query results from Exact Search: ', round(time.time()-start_time,4))
@@ -498,9 +518,8 @@ def main():
 
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
-       # docs0 = i.exact_search(query,10)
-       # print(docs0)
-       # docs1,doc2 = i.inexact_search(query,5)
+        docs0 = i.exact_search(query,10)
+        docs1,docs2,docs3 = i.inexact_search(query,10)
 if __name__ == '__main__':
     main()
 
