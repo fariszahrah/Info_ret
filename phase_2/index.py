@@ -176,7 +176,7 @@ class index:
             scores0 = self.search_champions_list(query,k)
             
             #Index Elimination
-            scores1 = self.saerch_index_elimination(query)
+            scores1 = self.saerch_index_elimination(query,k)
             
             
             #Cluster Pruning 
@@ -213,12 +213,12 @@ class index:
 ############################
         
         #searching index elimination
-        def saerch_index_elimination(self, query, fraction = 0.5):
+        def saerch_index_elimination(self, query, k,fraction = 0.5):
             start_time = time.time()
             query = self.index_elimination(query)
             docs_to_score = set()
             for termID in query:
-                for doc in self.posting_list[termId]:
+                for doc in self.posting_list[termID]:
                     if type(doc) == tuple:
                         docs_to_score.add(doc[0])
 
@@ -527,6 +527,9 @@ def main():
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
         docs1,docs2,docs3 = i.inexact_search(query,10)
+
+       # for i in docs0:
+       #     print(i)
 if __name__ == '__main__':
     main()
 
