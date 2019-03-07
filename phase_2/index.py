@@ -99,11 +99,13 @@ class index:
                     else:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
-
+            
+            print('\nIndex build time prior to champions list:',round(time.time()-start_time,4))
             self.compute_champions_list(15)
+            print('\nIndex build time prior to Pruning Clusters:',round(time.time()-start_time,4))
             self.build_pruning_clusters(2)
 
-            print('Index built in: ', round(time.time()-start_time,4))
+            print('\nComplete Index built in: ', round(time.time()-start_time,4))
  
 
 
@@ -137,7 +139,8 @@ class index:
                             potential_docs.append((doc[0],doc[1]))
                     potential_docs = sorted(potential_docs, key=lambda k:(-k[1],k[0]))
                     for doc in potential_docs:
-                        docs_to_add.append(doc[0])
+                        if doc[1] > 15:
+                            docs_to_add.append(doc[0])
                     self.champions_list[term] = docs_to_add[:k]
         
         def search_champions_list(self, query, k):
@@ -182,7 +185,7 @@ class index:
             #Cluster Pruning 
             scores2 = self.search_clusters(query,k)
 
-            return scores0, scores1, scores2 
+            return scores0, scores1#, scores2 
         
 
 
@@ -230,6 +233,7 @@ class index:
                 for i in range(len(scores)):
                     print(self.docID[scores[i][1]])
                 print('Index Elimination w/o Champions list Retrieval time: ',round(time.time()-start_time,4))
+            print(round(time.time()-start_time,4))
             return scores 
         
 
@@ -275,15 +279,17 @@ class index:
                 query_vector, leader_vector = self.compute_doc_query_vectors(query, leader)
                 cosine_sim = self.compute_cosine_sim(query_vector, leader_vector)
                 leader_score.append((cosine_sim,leader))
-
+            print(leader_score)
             leader_score = sorted(leader_score, key=lambda x:(-x[0],x[1]))
+            print('leaders: ',leader_score)
             docs_to_score = []
             for leader in leader_score:
                 if len(docs_to_score) < k:
+                    docs_to_score.append(leader[1])
                     docs_to_score.extend(self.pruning_clusters[leader[1]])
                 else:
                     break
-            
+            print(self.pruning_clusters[leader[1]],'\n',docs_to_score) 
             scores = self.score_documents(query, docs_to_score, k)
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
@@ -292,7 +298,7 @@ class index:
                 for i in range(len(scores)):
                     print(self.docID[scores[i][1]])
                 print('Time taken to retrieve query results using Cluster Pruning:',round(time.time()-start_time,4))
- 
+            #print(round(time.time()-start_time,4))
             return scores 
 
 
@@ -334,7 +340,7 @@ class index:
                 print('\nExact Search Results:')
                 for i in range(min(k,len(scores))):
                     print(self.docID[scores[i][1]])
-                print('Time taken to retrieve query results from Exact Search: ', round(time.time()-start_time,4))
+            print('Time taken to retrieve query results from Exact Search: ', round(time.time()-start_time,4))
             return scores[:k]
         
 
@@ -506,11 +512,9 @@ def main():
     i.buildIndex()
    
    #debugging
-    '''
-    for x in range(0,100):
-        if(len(i.posting_list[x]) ==2):
-            print(x, i.posting_list[x],len(i.posting_list[x])) 
-    '''
+    
+    #for x in range(0,5):
+    #    print(x, i.posting_list[x],len(i.posting_list[x])) 
    
     '''
     i.examine_champions_list()
@@ -522,14 +526,20 @@ def main():
     for x in range(1,3):
         print(i.doc_to_term[x])
     '''
-
+    
+    #query = ['when','sister','my','went','summer','dinner','after','breakfast','before','spring','dinner','festival','music','school','nurse','winter','season','technology','computer','water','yours','brother','mother','father','neighbor','noodles','sir','mirror','floor','head','face','teacher','mean','monday','tuesday','wednesday']
+    #for x in range(1,len(query)):
+       # i.exact_search(query[:x],10)
+     #   i.inexact_search(query[:x])
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
-        docs1,docs2,docs3 = i.inexact_search(query,10)
+        docs1,docs2 = i.inexact_search(query,10)
 
        # for i in docs0:
        #     print(i)
+
+
 if __name__ == '__main__':
     main()
 
