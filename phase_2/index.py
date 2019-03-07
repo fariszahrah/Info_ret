@@ -60,12 +60,13 @@ class index:
             for infile in range(len(listing)):
             #for infile in range(1):
                 f = open(path + listing[infile])
-                self.docID[len(self.docID)] = listing[infile] 
+                doc_to_ref = len(self.docID)
+                self.docID[doc_to_ref] = listing[infile] 
                 index = {}
                 m = p.findall(f.read().lower())
                 
                 #adding the docID to a doc_to_term dictionary
-                self.doc_to_term[len(self.docID)-1] = {}
+                self.doc_to_term[doc_to_ref] = {}
 
                 #this creates the termID dictionary
                 #m = total terms per document
@@ -73,10 +74,11 @@ class index:
                 for i in range(len(m)):
                     if m[i] not in self.stop_words:
                         if m[i] in self.termID:
-                            ID = self.termID[m[i]]
+                            ID = self.termID[m[i]] 
                         else:
                             ID = len(self.termID)
                             self.termID[m[i]]=len(self.termID)
+                    
                         
 
 
@@ -91,7 +93,7 @@ class index:
                 #Here we take our document posting list, and cast into tuples nad add to the final posting list        
                 for i in index:
                     
-                    self.doc_to_term[len(self.docID)-1][i]=len(index[i])
+                    self.doc_to_term[doc_to_ref][i]=len(index[i])
                     if i in self.posting_list:  
                         self.posting_list[i].append((len(self.docID)-1,len(index[i]) ,index[i]))
                         TFID = math.log10(len(listing)/(len(self.posting_list[i])-1))
@@ -100,9 +102,9 @@ class index:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
             
-            print('\nIndex build time prior to champions list:',round(time.time()-start_time,4))
+            #print('\nIndex build time prior to champions list:',round(time.time()-start_time,4))
             self.compute_champions_list(15)
-            print('\nIndex build time prior to Pruning Clusters:',round(time.time()-start_time,4))
+            #print('\nIndex build time prior to Pruning Clusters:',round(time.time()-start_time,4))
             self.build_pruning_clusters(2)
 
             print('\nComplete Index built in: ', round(time.time()-start_time,4))
@@ -176,16 +178,16 @@ class index:
             query = self.query_to_termID(query)
             
             #Champions List 
-            scores0 = self.search_champions_list(query,k)
+            #scores0 = self.search_champions_list(query,k)
             
             #Index Elimination
-            scores1 = self.saerch_index_elimination(query,k)
+            #scores1 = self.saerch_index_elimination(query,k)
             
             
             #Cluster Pruning 
             scores2 = self.search_clusters(query,k)
 
-            return scores0, scores1#, scores2 
+            #return scores0, scores1, scores2 
         
 
 
@@ -233,7 +235,6 @@ class index:
                 for i in range(len(scores)):
                     print(self.docID[scores[i][1]])
                 print('Index Elimination w/o Champions list Retrieval time: ',round(time.time()-start_time,4))
-            print(round(time.time()-start_time,4))
             return scores 
         
 
@@ -244,7 +245,7 @@ class index:
     # 
         
         
-        def build_pruning_clusters(self, nearest_leaders =2):
+        def build_pruning_clusters(self, nearest_leaders =1):
             
             path = self.path
             listing = os.listdir(path)
@@ -273,23 +274,29 @@ class index:
 
         # using the query, search the most similar 
         def search_clusters(self, query, k):
+            print('QUERY IS {0}'.format(query))
             start_time = time.time()
             leader_score = []
             for leader in self.pruning_clusters:
+               # print(self.doc_to_term[leader])
+               # print(self.doc_to_term[leader])
                 query_vector, leader_vector = self.compute_doc_query_vectors(query, leader)
+               # print(query_vector, leader_vector)
                 cosine_sim = self.compute_cosine_sim(query_vector, leader_vector)
+                #print(cosine_sim)
                 leader_score.append((cosine_sim,leader))
-            print(leader_score)
             leader_score = sorted(leader_score, key=lambda x:(-x[0],x[1]))
-            print('leaders: ',leader_score)
+            print('\n\nleaders: ',leader_score)
             docs_to_score = []
             for leader in leader_score:
                 if len(docs_to_score) < k:
+                    print('adding leader {0}'.format(leader))
+                    print(self.pruning_clusters[leader[1]])
                     docs_to_score.append(leader[1])
                     docs_to_score.extend(self.pruning_clusters[leader[1]])
                 else:
                     break
-            print(self.pruning_clusters[leader[1]],'\n',docs_to_score) 
+            print('\n\n',docs_to_score) 
             scores = self.score_documents(query, docs_to_score, k)
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
@@ -363,7 +370,7 @@ class index:
         def doc_doc_vectors(self, doc0, doc1):
             doc0_vector = []
             doc1_vector = []
-            doc1_copy = self.doc_to_term[doc1]
+            doc1_copy = self.doc_to_term[doc1].copy()
             for term in self.doc_to_term[doc0]:
                 Wtf = 1 + math.log10(self.doc_to_term[doc0][term])
                 doc0_vector.append(Wtf * self.posting_list[term][0])
@@ -521,9 +528,8 @@ def main():
     for x in range(0,40):
         print(i.champions_list[x])
     '''
-
     '''
-    for x in range(1,3):
+    for x in range(366,423):
         print(i.doc_to_term[x])
     '''
     
@@ -534,7 +540,7 @@ def main():
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
-        docs1,docs2 = i.inexact_search(query,10)
+        i.inexact_search(query,10)
 
        # for i in docs0:
        #     print(i)
