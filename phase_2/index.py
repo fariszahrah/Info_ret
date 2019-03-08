@@ -387,7 +387,6 @@ class index:
                 doc0_vector.append(0)
 
             return doc0_vector, doc1_vector 
-
                 
 
         #takes a query,document, and computes the document and query vectors
