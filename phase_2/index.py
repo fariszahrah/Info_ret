@@ -56,7 +56,7 @@ class index:
             p = re.compile('[a-z]+',re.IGNORECASE)
             
             listing = os.listdir(path)
-            print('total number of documents: %d'%len(listing))
+            #print('total number of documents: %d'%len(listing))
             for infile in range(len(listing)):
             #for infile in range(1):
                 f = open(path + listing[infile])
@@ -107,7 +107,7 @@ class index:
             #print('\nIndex build time prior to Pruning Clusters:',round(time.time()-start_time,4))
             self.build_pruning_clusters(2)
 
-            print('\nComplete Index built in: ', round(time.time()-start_time,4))
+           # print('\nComplete Index built in: ', round(time.time()-start_time,4))
  
 
 
@@ -245,7 +245,7 @@ class index:
     # 
         
         
-        def build_pruning_clusters(self, nearest_leaders =1):
+        def build_pruning_clusters(self, nearest_leaders =2):
             
             path = self.path
             listing = os.listdir(path)
@@ -265,6 +265,7 @@ class index:
                 for i in range(nearest_leaders):
                     if scores[i][1] in self.pruning_clusters:
                         self.pruning_clusters[scores[i][1]].append(follower)
+                    
                     else:
                         self.pruning_clusters[scores[i][1]]=[follower]
                     
@@ -273,8 +274,7 @@ class index:
 
 
         # using the query, search the most similar 
-        def search_clusters(self, query, k):
-            print('QUERY IS {0}'.format(query))
+        def search_clusters(self, query, k, minimun_leaders=2):
             start_time = time.time()
             leader_score = []
             for leader in self.pruning_clusters:
@@ -286,18 +286,19 @@ class index:
                 #print(cosine_sim)
                 leader_score.append((cosine_sim,leader))
             leader_score = sorted(leader_score, key=lambda x:(-x[0],x[1]))
-            print('\n\nleaders: ',leader_score)
             docs_to_score = []
-            for leader in leader_score:
-                if len(docs_to_score) < k:
-                    print('adding leader {0}'.format(leader))
-                    print(self.pruning_clusters[leader[1]])
+            for index, leader in enumerate(leader_score):
+                if index < minimun_leaders:
+                #    print('added leader {0}'.format(leader[1]))
+                    docs_to_score.append(leader[1])
+                    docs_to_score.extend(self.pruning_clusters[leader[1]])
+                elif len(docs_to_score) < k:
                     docs_to_score.append(leader[1])
                     docs_to_score.extend(self.pruning_clusters[leader[1]])
                 else:
                     break
-            print('\n\n',docs_to_score) 
             scores = self.score_documents(query, docs_to_score, k)
+            '''
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
@@ -305,7 +306,8 @@ class index:
                 for i in range(len(scores)):
                     print(self.docID[scores[i][1]])
                 print('Time taken to retrieve query results using Cluster Pruning:',round(time.time()-start_time,4))
-            #print(round(time.time()-start_time,4))
+            '''
+            print(round(time.time()-start_time,4))
             return scores 
 
 
@@ -387,7 +389,31 @@ class index:
                 doc0_vector.append(0)
 
             return doc0_vector, doc1_vector 
-                
+
+
+        '''
+        #this takes longer than the function doc_doc_vectors 
+        #AAAAAAAAAAA, I need to speed this up
+
+        def doc_doc_vectors_v0(self, doc0, doc1):
+            doc0_v = []
+            doc1_v = []
+            for term in self.doc_to_term[doc0]:
+                term_freq0 =  1 + math.log10(self.doc_to_term[doc0][term])
+                doc0_v.append(term_freq0 * self.posting_list[term][0])
+                if term in self.doc_to_term[doc1]:
+                    term_freq1 = 1 + math.log10(self.doc_to_term[doc1][term])
+                    doc1_v.append(term_freq1 * self.posting_list[term][0])
+                else:
+                    doc1_v.append(0)
+            for term in self.doc_to_term[doc1]:
+                if term not in self.doc_to_term[doc0]:
+                    doc0_v.append(0)
+                    term_freq1 = 1 + math.log10(self.doc_to_term[doc1][term])
+                    doc1_v.append(term_freq1 * self.posting_list[term][0])
+            return doc0_v, doc1_v
+        '''
+
 
         #takes a query,document, and computes the document and query vectors
         def compute_doc_query_vectors(self, query, docID):
@@ -514,7 +540,7 @@ def is_equal(items):
 def main():
     ind = './../collection/'
     i = index(ind) 
-    print('Index being used: %s' %ind)
+ #   print('Index being used: %s' %ind)
     i.buildIndex()
    
    #debugging
@@ -532,10 +558,11 @@ def main():
         print(i.doc_to_term[x])
     '''
     
-    #query = ['when','sister','my','went','summer','dinner','after','breakfast','before','spring','dinner','festival','music','school','nurse','winter','season','technology','computer','water','yours','brother','mother','father','neighbor','noodles','sir','mirror','floor','head','face','teacher','mean','monday','tuesday','wednesday']
-    #for x in range(1,len(query)):
+    query = ['when','sister','my','went','summer','dinner','after','breakfast','before','spring','dinner','festival','music','school','nurse','winter','season','technology','computer','water','yours','brother','mother','father','neighbor','noodles','sir','mirror','floor','head','face','teacher','mean','monday','tuesday','wednesday','tea','plate','ham','junior','bacon','eggs','pasta','mango','song','light','carpet','jewelry','ring','money']
+    for x in range(1,len(query)):
        # i.exact_search(query[:x],10)
-     #   i.inexact_search(query[:x])
+        i.inexact_search(query[:x])
+    '''
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
@@ -544,7 +571,7 @@ def main():
        # for i in docs0:
        #     print(i)
 
-
+    '''
 if __name__ == '__main__':
     main()
 
