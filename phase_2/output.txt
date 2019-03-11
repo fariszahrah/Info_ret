@@ -1,62 +1,107 @@
 // The following is the program output based on the queries in the text below
 // More analysis of the various approaches to querying is detailed in a seperate document
-
 Index being used: ./../collection/
-total number of documents: 423
-Index built in:  3.015
-Please enter the query terms:i went to the store to go get food and i saw a dog         
+Index build time prior to champions list: 0.587
+Index build time prior to Pruning Clusters: 0.6811
+Complete Index built in:  5.0985
+Please enter the query terms:LONG DISTANCE FROM BAGHDAD
 
 Exact Search Results:
-Text-328.txt
+Text-233.txt
+Text-386.txt
+Text-235.txt
+Text-417.txt
 Text-86.txt
-Text-399.txt
-Text-147.txt
-Text-117.txt
-Text-413.txt
-Text-142.txt
-Text-396.txt
-Text-52.txt
-Text-273.txt
-Time taken to retrieve query results from Exact Search:  0.118
+Text-55.txt
+Text-115.txt
+Text-70.txt
+Text-121.txt
+Text-267.txt
+Time taken to retrieve query results from Exact Search:  0.0684
 
 Champions List Results
-Text-328.txt
+Text-233.txt
+Text-386.txt
+Text-235.txt
+Text-417.txt
 Text-86.txt
-Text-399.txt
-Text-147.txt
-Text-117.txt
-Text-413.txt
-Text-142.txt
-Text-396.txt
-Text-52.txt
-Text-273.txt
-Champions List Retrieval time:  0.0416
+Text-55.txt
+Text-115.txt
+Text-70.txt
+Text-121.txt
+Text-267.txt
+Champions List Retrieval time:  0.0089
 
 Index Elimination Results
-Text-328.txt
+Text-233.txt
+Text-386.txt
+Text-235.txt
+Text-417.txt
 Text-86.txt
-Text-399.txt
-Text-117.txt
-Text-413.txt
-Text-396.txt
-Text-142.txt
-Text-147.txt
-Text-52.txt
-Text-93.txt
-Index Elimination w/o Champions list Retrieval time:  0.063
+Text-55.txt
+Text-115.txt
+Text-70.txt
+Text-267.txt
+Text-121.txt
+Index Elimination w/o Champions list Retrieval time:  0.0091
 
 Cluster Pruning Results
-Text-328.txt
-Text-147.txt
-Text-142.txt
-Text-396.txt
-Text-345.txt
-Text-98.txt
-Text-318.txt
-Text-17.txt
-Text-99.txt
-Text-298.txt
-Time taken to retrieve query results using Cluster Pruning: 0.0685
+Text-205.txt
+Text-379.txt
+Text-213.txt
+Text-182.txt
+Text-393.txt
+Text-409.txt
+Text-42.txt
+Text-77.txt
+Text-167.txt
+Text-143.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0321
+Please enter the query terms:WHICH STIPULATES THAT BRITAIN
+
+Exact Search Results:
+Text-1.txt
+Text-80.txt
+Text-167.txt
+Text-310.txt
+Text-247.txt
+Text-148.txt
+Text-20.txt
+Text-207.txt
+Text-58.txt
+Text-36.txt
+Time taken to retrieve query results from Exact Search:  0.1137
+
+Champions List Results
+Text-1.txt
+Text-47.txt
+Champions List Retrieval time:  0.0018
+
+Index Elimination Results
+Text-1.txt
+Text-310.txt
+Text-58.txt
+Text-167.txt
+Text-247.txt
+Text-36.txt
+Text-80.txt
+Text-93.txt
+Text-75.txt
+Text-20.txt
+Index Elimination w/o Champions list Retrieval time:  0.044
+
+Cluster Pruning Results
+Text-1.txt
+Text-80.txt
+Text-167.txt
+Text-247.txt
+Text-148.txt
+Text-20.txt
+Text-207.txt
+Text-58.txt
+Text-54.txt
+Text-75.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0382
 Please enter the query terms:hello world
 
 Exact Search Results:
@@ -64,198 +109,172 @@ Text-98.txt
 Text-187.txt
 Text-292.txt
 Text-102.txt
+Text-330.txt
+Text-36.txt
 Text-80.txt
 Text-37.txt
 Text-341.txt
 Text-139.txt
-Text-263.txt
-Text-401.txt
-Time taken to retrieve query results from Exact Search:  0.0656
+Time taken to retrieve query results from Exact Search:  0.0603
 
 Champions List Results
 Text-98.txt
 Text-292.txt
-Text-263.txt
-Text-48.txt
-Text-160.txt
-Text-321.txt
-Text-382.txt
-Text-155.txt
-Text-159.txt
-Text-79.txt
-Champions List Retrieval time:  0.012
-
-Index Elimination Results
-Text-98.txt
-Index Elimination w/o Champions list Retrieval time:  0.0004
-
-Cluster Pruning Results
-Text-98.txt
-Text-187.txt
-Text-292.txt
-Text-341.txt
-Text-263.txt
-Text-318.txt
-Text-48.txt
-Text-414.txt
-Text-218.txt
-Text-65.txt
-Time taken to retrieve query results using Cluster Pruning: 0.0607
-Please enter the query terms:school institute fine arts technology wonderful amazing
-
-Exact Search Results:
-Text-89.txt
-Text-145.txt
-Text-263.txt
-Text-238.txt
-Text-149.txt
-Text-370.txt
-Text-191.txt
-Text-95.txt
-Text-281.txt
-Text-421.txt
-Time taken to retrieve query results from Exact Search:  0.0421
-
-Champions List Results
-Text-89.txt
-Text-145.txt
-Text-263.txt
-Text-238.txt
-Text-149.txt
-Text-370.txt
-Text-191.txt
-Text-95.txt
-Text-281.txt
-Text-421.txt
-Champions List Retrieval time:  0.025
-
-Index Elimination Results
-Text-89.txt
-Text-145.txt
-Text-370.txt
-Text-263.txt
-Text-295.txt
-Text-238.txt
-Text-281.txt
-Text-159.txt
-Text-274.txt
-Text-79.txt
-Index Elimination w/o Champions list Retrieval time:  0.0103
-
-Cluster Pruning Results
-Text-145.txt
-Text-263.txt
-Text-191.txt
-Text-421.txt
-Text-295.txt
-Text-116.txt
-Text-98.txt
-Text-67.txt
-Text-233.txt
-Text-204.txt
-Time taken to retrieve query results using Cluster Pruning: 0.0757
-Please enter the query terms:jazz music piano trumpet player band night club   
-
-Exact Search Results:
-Text-337.txt
-Text-362.txt
-Text-277.txt
-Text-271.txt
-Text-29.txt
-Text-199.txt
-Text-113.txt
-Text-72.txt
-Text-218.txt
-Text-312.txt
-Time taken to retrieve query results from Exact Search:  0.0507
-
-Champions List Results
-Text-337.txt
-Text-362.txt
-Text-277.txt
-Text-271.txt
-Text-29.txt
-Text-199.txt
-Text-113.txt
-Text-72.txt
-Text-218.txt
-Text-312.txt
-Champions List Retrieval time:  0.0271
-
-Index Elimination Results
-Text-337.txt
-Text-277.txt
-Text-113.txt
 Text-294.txt
-Text-271.txt
-Text-253.txt
-Text-393.txt
-Index Elimination w/o Champions list Retrieval time:  0.0046
-
-Cluster Pruning Results
-Text-29.txt
-Text-199.txt
-Text-72.txt
-Text-218.txt
-Text-312.txt
-Text-15.txt
-Text-146.txt
-Text-153.txt
-Text-192.txt
-Text-253.txt
-Time taken to retrieve query results using Cluster Pruning: 0.0677
-Please enter the query terms:tea china japan sake sushi drink eat dinner family 
-
-Exact Search Results:
-Text-41.txt
-Text-160.txt
-Text-97.txt
-Text-327.txt
-Text-199.txt
-Text-9.txt
-Text-329.txt
-Text-125.txt
-Text-324.txt
-Text-275.txt
-Time taken to retrieve query results from Exact Search:  0.0692
-
-Champions List Results
-Text-41.txt
-Text-160.txt
-Text-97.txt
-Text-327.txt
-Text-199.txt
-Text-9.txt
-Text-329.txt
-Text-125.txt
-Text-324.txt
-Text-275.txt
-Champions List Retrieval time:  0.0332
+Champions List Retrieval time:  0.0036
 
 Index Elimination Results
-Text-41.txt
-Text-160.txt
-Text-125.txt
-Text-327.txt
-Text-123.txt
-Text-9.txt
-Text-97.txt
-Text-147.txt
-Text-275.txt
-Text-384.txt
-Index Elimination w/o Champions list Retrieval time:  0.0156
+Text-98.txt
+Index Elimination w/o Champions list Retrieval time:  0.0006
 
 Cluster Pruning Results
-Text-199.txt
-Text-9.txt
-Text-324.txt
-Text-384.txt
-Text-123.txt
-Text-387.txt
-Text-147.txt
-Text-67.txt
-Text-85.txt
-Text-103.txt
-Time taken to retrieve query results using Cluster Pruning: 0.074
-Please enter the query terms:
+Text-318.txt
+Text-200.txt
+Text-218.txt
+Text-14.txt
+Text-177.txt
+Text-361.txt
+Text-213.txt
+Text-399.txt
+Text-338.txt
+Text-107.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0165
+Please enter the query terms:TWELVE-YEAR STRUGGLE AGAINST COMMUNIST GUERRILLA
 
+Exact Search Results:
+Text-19.txt
+Text-194.txt
+Text-339.txt
+Text-211.txt
+Text-155.txt
+Text-252.txt
+Text-383.txt
+Text-407.txt
+Text-352.txt
+Text-205.txt
+Time taken to retrieve query results from Exact Search:  0.1047
+
+Champions List Results
+Text-343.txt
+Champions List Retrieval time:  0.0018
+
+Index Elimination Results
+Text-194.txt
+Text-19.txt
+Text-339.txt
+Text-211.txt
+Text-155.txt
+Text-383.txt
+Text-252.txt
+Text-352.txt
+Text-205.txt
+Text-407.txt
+Index Elimination w/o Champions list Retrieval time:  0.0218
+
+Cluster Pruning Results
+Text-19.txt
+Text-339.txt
+Text-155.txt
+Text-341.txt
+Text-232.txt
+Text-315.txt
+Text-343.txt
+Text-6.txt
+Text-70.txt
+Text-65.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0388
+Please enter the query terms:BRITISH PROTECTORATES OF SARAWAK
+
+Exact Search Results:
+Text-155.txt
+Text-339.txt
+Text-358.txt
+Text-212.txt
+Text-242.txt
+Text-269.txt
+Text-61.txt
+Text-303.txt
+Text-156.txt
+Text-36.txt
+Time taken to retrieve query results from Exact Search:  0.0569
+
+Champions List Results
+Text-155.txt
+Text-339.txt
+Text-358.txt
+Text-212.txt
+Text-242.txt
+Text-269.txt
+Text-61.txt
+Text-303.txt
+Text-156.txt
+Champions List Retrieval time:  0.004
+
+Index Elimination Results
+Text-155.txt
+Text-339.txt
+Text-358.txt
+Text-212.txt
+Text-242.txt
+Text-269.txt
+Text-61.txt
+Text-303.txt
+Text-156.txt
+Index Elimination w/o Champions list Retrieval time:  0.0033
+
+Cluster Pruning Results
+Text-155.txt
+Text-339.txt
+Text-358.txt
+Text-212.txt
+Text-242.txt
+Text-269.txt
+Text-61.txt
+Text-303.txt
+Text-156.txt
+Text-36.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0129
+Please enter the query terms:CARRYING HUGE PAPER DRAGONS
+
+Exact Search Results:
+Text-222.txt
+Text-214.txt
+Text-181.txt
+Text-420.txt
+Text-368.txt
+Text-265.txt
+Text-270.txt
+Text-324.txt
+Text-290.txt
+Text-402.txt
+Time taken to retrieve query results from Exact Search:  0.0399
+
+Champions List Results
+Text-222.txt
+Champions List Retrieval time:  0.0003
+
+Index Elimination Results
+Text-222.txt
+Text-181.txt
+Text-420.txt
+Text-402.txt
+Text-214.txt
+Text-53.txt
+Text-248.txt
+Text-418.txt
+Text-252.txt
+Text-286.txt
+Index Elimination w/o Champions list Retrieval time:  0.0105
+
+Cluster Pruning Results
+Text-270.txt
+Text-290.txt
+Text-231.txt
+Text-248.txt
+Text-57.txt
+Text-315.txt
+Text-418.txt
+Text-18.txt
+Text-279.txt
+Text-397.txt
+Time taken to retrieve query results using Cluster Pruning: 0.0401

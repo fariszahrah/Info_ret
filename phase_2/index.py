@@ -1,4 +1,5 @@
 #Python 3.7
+
 import re
 import os
 import collections
@@ -102,12 +103,12 @@ class index:
                         TFID = math.log10(len(listing))
                         self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
             
-            #print('\nIndex build time prior to champions list:',round(time.time()-start_time,4))
+            print('Index build time prior to champions list:',round(time.time()-start_time,4))
             self.compute_champions_list(15)
-            #print('\nIndex build time prior to Pruning Clusters:',round(time.time()-start_time,4))
+            print('Index build time prior to Pruning Clusters:',round(time.time()-start_time,4))
             self.build_pruning_clusters(2)
 
-           # print('\nComplete Index built in: ', round(time.time()-start_time,4))
+            print('Complete Index built in: ', round(time.time()-start_time,4))
  
 
 
@@ -178,16 +179,16 @@ class index:
             query = self.query_to_termID(query)
             
             #Champions List 
-            #scores0 = self.search_champions_list(query,k)
+            scores0 = self.search_champions_list(query,k)
             
             #Index Elimination
-            #scores1 = self.saerch_index_elimination(query,k)
+            scores1 = self.saerch_index_elimination(query,k)
             
             
             #Cluster Pruning 
             scores2 = self.search_clusters(query,k)
 
-            #return scores0, scores1, scores2 
+            return scores0, scores1, scores2 
         
 
 
@@ -211,7 +212,6 @@ class index:
             
             for i in range(math.ceil(len(query)/fraction)):
                 terms_to_search.append(term_idf[i][0])
-            # print(terms_to_search)
             return terms_to_search
 
 
@@ -278,12 +278,8 @@ class index:
             start_time = time.time()
             leader_score = []
             for leader in self.pruning_clusters:
-               # print(self.doc_to_term[leader])
-               # print(self.doc_to_term[leader])
                 query_vector, leader_vector = self.compute_doc_query_vectors(query, leader)
-               # print(query_vector, leader_vector)
                 cosine_sim = self.compute_cosine_sim(query_vector, leader_vector)
-                #print(cosine_sim)
                 leader_score.append((cosine_sim,leader))
             leader_score = sorted(leader_score, key=lambda x:(-x[0],x[1]))
             docs_to_score = []
@@ -297,8 +293,8 @@ class index:
                     docs_to_score.extend(self.pruning_clusters[leader[1]])
                 else:
                     break
-            scores = self.score_documents(query, docs_to_score, k)
-            '''
+            scores = self.score_documents(query, set(docs_to_score), k)
+            
             if len(scores) == 0:
                 print('\nSorry we didnt find any similar documents :(\n')
             else:
@@ -306,8 +302,8 @@ class index:
                 for i in range(len(scores)):
                     print(self.docID[scores[i][1]])
                 print('Time taken to retrieve query results using Cluster Pruning:',round(time.time()-start_time,4))
-            '''
-            print(round(time.time()-start_time,4))
+            
+            #print(round(time.time()-start_time,4))
             return scores 
 
 
@@ -540,29 +536,25 @@ def is_equal(items):
 def main():
     ind = './../collection/'
     i = index(ind) 
- #   print('Index being used: %s' %ind)
+    print('Index being used: %s' %ind)
     i.buildIndex()
-   
-   #debugging
-    
-    #for x in range(0,5):
-    #    print(x, i.posting_list[x],len(i.posting_list[x])) 
    
     '''
     i.examine_champions_list()
     for x in range(0,40):
         print(i.champions_list[x])
-    '''
-    '''
+    
+    
     for x in range(366,423):
         print(i.doc_to_term[x])
-    '''
+    
     
     query = ['when','sister','my','went','summer','dinner','after','breakfast','before','spring','dinner','festival','music','school','nurse','winter','season','technology','computer','water','yours','brother','mother','father','neighbor','noodles','sir','mirror','floor','head','face','teacher','mean','monday','tuesday','wednesday','tea','plate','ham','junior','bacon','eggs','pasta','mango','song','light','carpet','jewelry','ring','money']
     for x in range(1,len(query)):
        # i.exact_search(query[:x],10)
         i.inexact_search(query[:x])
     '''
+
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
@@ -571,7 +563,7 @@ def main():
        # for i in docs0:
        #     print(i)
 
-    '''
+
 if __name__ == '__main__':
     main()
 
