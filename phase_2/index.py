@@ -104,7 +104,7 @@ class index:
                         self.posting_list[i]=[TFID, (len(self.docID)-1,len(index[i]),index[i])]
             
             print('Index build time prior to champions list:',round(time.time()-start_time,4))
-            self.compute_champions_list(15)
+            self.compute_champions_list(5)
             print('Index build time prior to Pruning Clusters:',round(time.time()-start_time,4))
             self.build_pruning_clusters(2)
 
@@ -558,7 +558,7 @@ def main():
     while True:
         query = (input('Please enter the query terms:').strip().lower()).split(' ')
         docs0 = i.exact_search(query,10)
-        i.inexact_search(query,10)
+        docs1, docs2, docs3 = i.inexact_search(query,10)
 
        # for i in docs0:
        #     print(i)

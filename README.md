@@ -18,4 +18,8 @@ phase2
 	--cluster pruning
 	
 	--index elimination
-	
+
+
+phase3
+
+	-- rocchio feedback	
