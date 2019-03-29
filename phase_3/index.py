@@ -23,6 +23,9 @@ class index:
             # {term : termID, term: termID, ...}
             self.term_to_termID = {}
 
+            # {termID: term, termID:term, ...}
+            self.termID_to_term = {}
+
             # {docID : doc, docID : doc}
             self.doc_to_docID = {}
 
@@ -82,9 +85,9 @@ class index:
                         self.posting_list[termID] = [math.log10(len(docs)),(i,self.doc_to_term[i][termID])]
                     else:
                         self.posting_list[termID].append((i,self.doc_to_term[i][termID]))
-                        self.posting_list[termID][0]= math.log10(len(docs)/len(self.posting_list[termID])-1)
+                        self.posting_list[termID][0]= math.log10(len(docs)/(len(self.posting_list[termID])-1))
 
-
+            self.termID_to_term = dict([[v,k] for k,v in self.term_to_termID.items()])
             print('Index built in {0}'.format(time.time()-start_time))
 
 
@@ -121,13 +124,28 @@ class index:
             # first i just compute the vocab
             # this may not bbe the fastest way
             # i will refine after a working program
-            q_vector, pos_feedback_vectors, neg_feedback_vectors = self.create_rocchio_vectors(query, pos_feedback, neg_feedback)
+            vocab, q_vector, pos_feedback_vectors, neg_feedback_vectors = self.create_rocchio_vectors(query, 
+                                                                            pos_feedback, neg_feedback)
 
-            print(q_vector)
+            final_vector = q_vector 
+            pos_vector_sum = self.sum_vector_list(list(pos_feedback_vectors.values()))
+            neg_vector_sum = self.sum_vector_list(list(neg_feedback_vectors.values()))
+            
+            #weight vectors
+            pos_vector_sum = list(np.array(pos_vector_sum) * beta)
+            neg_vector_sum = list(np.array(neg_vector_sum) * gamma * -1)
+            
+            final_vector = self.sum_vector_list([final_vector, pos_vector_sum, neg_vector_sum]) 
+                
+            weighted_d = {}
+            for index,val in enumerate(vocab):
+                weighted_d[val] = final_vector[index]
+
+            return vocab,final_vector, weighted_d 
+       
 
 
-        
-        
+
         # returns all the vectors to perform rocchio  
         def create_rocchio_vectors(self, query, pos_feedback, neg_feedback):
             vocab = set()
@@ -151,7 +169,6 @@ class index:
 
             for term in vocab:
                 if term in query:
-                    print(query[term],self.posting_list[term][0])
                     q_vector.append(query[term] * self.posting_list[term][0])
                 else:
                     q_vector.append(0)
@@ -168,7 +185,10 @@ class index:
                     else:
                         neg_doc_vectors[doc].append(0)
 
-            return q_vector, pos_doc_vectors, neg_doc_vectors
+
+            return vocab, q_vector, pos_doc_vectors, neg_doc_vectors
+
+
 
         #function to print the terms and posting list in the index 
         def print_dict(self):
@@ -246,16 +266,37 @@ class index:
                 query_vector.append(query_copy[i] * (self.posting_list[i][0]))
                 doc_vector.append(0)
 
-            #normalize and dot product
+            # normalize and dot product
             query_vector = normalize([query_vector])[0]
             doc_vector = normalize([doc_vector])[0]
 
             #score = 1 - spatial.distance.cosine(query_vector, doc_vector)
             score = np.array(query_vector).dot(np.array(doc_vector))
             return score 
+            
+            
+        # takes 2 vectors and returns one vector with each element 
+        # being the sum of the two inputs
+        # vectors must be of equal length
+        def sum_2vectors(self, v1, v2):
+            assert len(v1) == len(v2), 'vectors must be of equal length'
+            vector_sum = [x + y for x, y in zip(v1, v2)]
+                
+            return vector_sum
+            
+        # takes a list of vectors, returns one vector with each element
+        # being the sum of all vector inputs 
+        # vectors must be of equal length
+        def sum_vector_list(self, vectors):
+            for v in vectors:
+                assert len(v) == len(vectors[0]), 'vectors must be of equal length'
+            final_vector = [0 for i in range(len(vectors[0]))]
 
+            for element in range(len(final_vector)):
+                for v in vectors:
+                    final_vector[element] += v[element]
 
-
+            return final_vector
 
 
         
@@ -287,7 +328,7 @@ def main():
         elif inp ==('y' or 'Y'):
             pos_feedback = input('\nEnter relevant document ids separated by space: ').split()
             neg_feedback = input('\nEnter non relevant document ids seperated bs space: ').split() 
-            i.rocchio(query, pos_feedback, neg_feedback)
+            vocab, new_q = i.rocchio(query, pos_feedback, neg_feedback)
 
         else:
             print("\nEnter 'y/n' idiot, I didnt give you any other options!")
