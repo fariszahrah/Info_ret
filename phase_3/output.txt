@@ -1,0 +1,101 @@
+Index built in: 0.9134278297424316 seconds
+
+Query 46:
+Round 1:
+Relavant docs: [32, 1, 291, 202, 80, 272, 20, 53, 54, 23, 151, 348, 157]
+Nonrelavant docs: {374, 215, 56, 26, 378}
+Round 2:
+Relavant docs: [32, 1, 291, 202, 47, 80, 272, 20, 53, 54, 23, 151, 348, 157]
+Nonrelavant docs: {89, 228, 148, 135}
+Round 3:
+Relavant docs: [32, 1, 291, 294, 39, 202, 47, 80, 272, 20, 53, 54, 23, 151, 348, 157]
+Nonrelavant docs: {48, 121}
+Round 4:
+Relavant docs: [32, 1, 291, 294, 39, 202, 47, 80, 272, 20, 53, 54, 23, 151, 348, 157]
+Nonrelavant docs: {378, 254}
+Round 5:
+Relavant docs: [32, 1, 291, 294, 39, 202, 47, 80, 272, 20, 53, 54, 23, 151, 348, 157]
+Nonrelavant docs: {148, 271}
+Percision: [0.7222, 0.7778, 0.8889, 0.8889, 0.8889]
+recall: [0.7222, 0.7778, 0.8889, 0.8889, 0.8889]
+map: [0.609, 0.7778, 0.8792, 0.8889, 0.8889]
+
+Query 6:
+Round 1:
+Relavant docs: [288, 257, 323, 326, 268, 304, 308]
+Nonrelavant docs: {395, 171}
+Round 2:
+Relavant docs: [288, 257, 323, 326, 268, 334, 304, 308]
+Nonrelavant docs: {370}
+Round 3:
+Relavant docs: [288, 257, 323, 326, 268, 334, 304, 308]
+Nonrelavant docs: {349}
+Round 4:
+Relavant docs: [288, 257, 323, 326, 268, 334, 304, 308]
+Nonrelavant docs: {359}
+Round 5:
+Relavant docs: [288, 257, 323, 324, 326, 268, 334, 304, 308]
+Nonrelavant docs: set()
+Percision: [0.7778, 0.8889, 0.8889, 0.8889, 1.0]
+recall: [0.7778, 0.8889, 0.8889, 0.8889, 1.0]
+map: [0.7073, 0.8889, 0.8889, 0.8889, 1.0]
+
+Query 12:
+Round 1:
+Relavant docs: [358, 269, 242, 339, 156, 61]
+Nonrelavant docs: {198, 423}
+Round 2:
+Relavant docs: [358, 269, 242, 339, 155, 156, 61]
+Nonrelavant docs: {303}
+Round 3:
+Relavant docs: [358, 269, 242, 339, 155, 156, 61]
+Nonrelavant docs: {121}
+Round 4:
+Relavant docs: [358, 269, 242, 339, 155, 156, 61]
+Nonrelavant docs: {303}
+Round 5:
+Relavant docs: [358, 269, 242, 339, 155, 156, 61]
+Nonrelavant docs: {238}
+Percision: [0.75, 0.875, 0.875, 0.875, 0.875]
+recall: [0.75, 0.875, 0.875, 0.875, 0.875]
+map: [0.7321, 0.8594, 0.875, 0.875, 0.875]
+
+Query 39:
+Round 1:
+Relavant docs: [360, 265, 173, 277, 22, 219, 189]
+Nonrelavant docs: {394, 150}
+Round 2:
+Relavant docs: [360, 73, 265, 173, 277, 22, 219, 189]
+Nonrelavant docs: {332}
+Round 3:
+Relavant docs: [360, 73, 265, 173, 277, 22, 219, 189]
+Nonrelavant docs: {394}
+Round 4:
+Relavant docs: [360, 73, 265, 173, 277, 22, 219, 189]
+Nonrelavant docs: {81}
+Round 5:
+Relavant docs: [360, 73, 265, 173, 277, 22, 219, 189]
+Nonrelavant docs: {133}
+Percision: [0.7778, 0.8889, 0.8889, 0.8889, 0.8889]
+recall: [0.7778, 0.8889, 0.8889, 0.8889, 0.8889]
+map: [0.748, 0.8889, 0.8889, 0.8889, 0.8889]
+
+Query 69:
+Round 1:
+Relavant docs: [224, 194, 100, 70, 234, 139, 210, 115, 309, 121, 159]
+Nonrelavant docs: {377, 386}
+Round 2:
+Relavant docs: [224, 194, 100, 70, 234, 139, 210, 115, 309, 121, 159]
+Nonrelavant docs: {86, 55}
+Round 3:
+Relavant docs: [224, 194, 100, 70, 234, 139, 210, 115, 309, 121, 159]
+Nonrelavant docs: {10, 195}
+Round 4:
+Relavant docs: [224, 194, 100, 70, 234, 139, 210, 115, 309, 121, 159]
+Nonrelavant docs: {386, 181}
+Round 5:
+Relavant docs: [224, 194, 100, 70, 234, 139, 210, 115, 309, 121, 159]
+Nonrelavant docs: {377, 386}
+Percision: [0.8462, 0.8462, 0.8462, 0.8462, 0.8462]
+recall: [0.8462, 0.8462, 0.8462, 0.8462, 0.8462]
+map: [0.5877, 0.8462, 0.8462, 0.8462, 0.8462]

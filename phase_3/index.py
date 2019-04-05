@@ -10,7 +10,7 @@ from collections import Counter
 from numpy import dot
 import numpy as np
 from numpy.linalg import norm
-
+import ml_metrics as ml
 
 class index:
         def __init__(self,path):
@@ -35,7 +35,8 @@ class index:
             # words to ignore from posting list
             self.stop_words = set()
             
-
+            #docid:document vector
+            self.document_vectors= {}
 
         def buildIndex(self):
 		#function to read documents from collection, tokenize and build the index with tokens
@@ -48,7 +49,7 @@ class index:
             with open(self.path + 'TIME.STP') as f:
                 p = re.compile('[a-z]+', re.IGNORECASE)
                 self.stop_words.update(p.findall(f.read().lower()))
-
+            
             #split entire doc on *, into indiv. docs
             with open(self.path + 'TIME.ALL') as f:
                 docs = f.read().lower().replace('\n', ' ').split('*')[1:-1]
@@ -96,14 +97,69 @@ class index:
             self.termID_to_term = dict([[v,k] for k,v in self.term_to_termID.items()])
             print('Index built in {0}'.format(time.time()-start_time))
 
+
+
+        def build_index2(self):
+            with open(self.path + 'TIME.STP') as f:
+                p = re.compile('\w+', re.IGNORECASE)
+                self.stop_words.update(p.findall(f.read().lower()))
+                self.stop_words.add('')
+            # split entire doc on *, into indiv. docs
+            with open(self.path + 'TIME.ALL') as f:
+                docs = f.read().lower().replace('\n', ' ').split('*')[1:-1]
+            
+
+            # removing all extranious spaces
+            for i in range(len(docs)):
+                docs[i]= ' '.join(docs[i].split())
+                 
+                # set the docID, doc title
+                self.doc_to_docID[i] = docs[i][:8] + '.txt'
+                # set the docID in doc_to_term
+                self.doc_to_term[i] = {}
+
+                #pattern = re.compile('\w+(?:-\w+)+|\w+[^ ]\w+|\w+',re.IGNORECASE)
+                pattern = re.compile('\w+',re.IGNORECASE)
+                tokens = re.findall(pattern, docs[i][27:])
+                #tokens = re.split('\W+', docs[i][26:].lower())
+                for token in tokens:
+                    if token not in self.stop_words:
+                        # if not a stop word, then craete a token ID if we have not seen the word 
+                        if token in self.term_to_termID:
+                            tokenID = self.term_to_termID[token]
+                        else:
+                            tokenID = len(self.term_to_termID)
+                            self.term_to_termID[token] = tokenID
+                
+                        
+                        if tokenID not in self.doc_to_term[i]:
+                            self.doc_to_term[i][tokenID] = 1
+                        else:
+                            self.doc_to_term[i][tokenID] += 1
+                
+                # now each doc_to_term dict is compiled, so we can populate the global
+                # posting list with the terms and their frequency
+                for termID in self.doc_to_term[i]:
+                    if termID in self.posting_list:
+                        self.posting_list[termID].append(tuple((i, self.doc_to_term[i][termID])))
+                        tfid = math.log10(len(docs) / (len(self.posting_list[termID])-1))
+                        self.posting_list[termID][0] = tfid
+                    else:
+                        tfid = math.log10(len(docs))
+                        self.posting_list[termID] = [tfid, tuple((i,self.doc_to_term[i][termID]))]
+            
+            self.termID_to_term = dict([[v,k] for k,v in self.term_to_termID.items()])
+                
+
         # exact top-k search
         # return top-k docIDs and their scores
         def exact_search(self, query, k):
-
             docs_to_score = self.find_all_docs(query) 
-            doc_scores = self.score_docs(query, docs_to_score)
+            doc_scores = self.score2(query, docs_to_score)
+            print(doc_scores[:10])
             if len(doc_scores) > k:
-                return doc_scores[:k]
+                docs = [i[1] for i in doc_scores[:k]]
+                return docs
             else:
                 return doc_scores 
 
@@ -115,7 +171,7 @@ class index:
 	#neg_feedback - documents deemed to be non-relevant by the user - list,iterable
 	#Return the new query  terms and their weights
         def rocchio(self, query, pos_feedback, neg_feedback, alpha = 1, beta = 0.75 , gamma = 0.15):
-            print(pos_feedback, neg_feedback)
+            #print(pos_feedback, neg_feedback)
             try:
                 pos_feedback = list(map(int, pos_feedback))
                 neg_feedback = list(map(int, neg_feedback))
@@ -130,17 +186,19 @@ class index:
             vocab, q_vector, pos_feedback_vectors, neg_feedback_vectors = self.create_rocchio_vectors(query, 
                                                                             pos_feedback, neg_feedback)
             
-            print('length of pos feedback: {0}, Length of negative feedback: {1}'.format(len(pos_feedback),len(neg_feedback)))
             final_vector = q_vector 
             pos_vector_sum = self.sum_vector_list(list(pos_feedback_vectors.values()))
-            neg_vector_sum = self.sum_vector_list(list(neg_feedback_vectors.values()))
+            if len(neg_feedback_vectors) >0:
+                neg_vector_sum = self.sum_vector_list(list(neg_feedback_vectors.values()))
             
             # weight vectors
             # and multiply by the number of documents 
             pos_vector_sum = list(np.array(pos_vector_sum) * beta / len(pos_feedback))
-            neg_vector_sum = list(np.array(neg_vector_sum) * gamma * -1 / len(neg_feedback))
-            final_vector = self.sum_vector_list([final_vector, pos_vector_sum, neg_vector_sum]) 
-                
+            if len(neg_feedback_vectors) >0:
+                neg_vector_sum = list(np.array(neg_vector_sum) * gamma * -1 / len(neg_feedback))
+                final_vector = self.sum_vector_list([final_vector, pos_vector_sum, neg_vector_sum]) 
+            else:
+                final_vector = self.sum_vector_list([final_vector, pos_vector_sum])
             weighted_d = {}
             vector_weighted = {}
             for index,val in enumerate(vocab):
@@ -265,12 +323,45 @@ class index:
             
             scores = [] # list of (score, docIDs)
             for i in docs:
-                score = self.compute_cosine(query, i)
+                score = self.compute_cosine2(query, i)
                 scores.append((score,i))
 
             return sorted(scores, key=lambda k:k[0], reverse=True)
 
+        def score2(self, query, docs):
+            scores = []
+            for i in docs:
+                q_v, d_v = self.compute_q_d_vectors(query,i)
+                score = self.compute_cosine2(q_v,d_v)
+                scores.append(tuple((score,i)))
             
+            return sorted(scores, key=lambda k:k[0], reverse=True)
+
+
+        #comepute vectors given a query and a doc 
+        def compute_q_d_vectors(self, query, docID):
+            q_v = []
+            d_v = []
+            for i in self.doc_to_term[docID]:
+                tfidf = (1+math.log10(self.doc_to_term[docID][i])) * self.posting_list[i][0] 
+                d_v.append(tfidf)
+                if i in query:
+                    idf = self.posting_list[i][0]
+                    q_v.append(query[i] * idf)
+                else:
+                    q_v.append(0)
+            
+            for i in query:
+                if i not in self.doc_to_term[docID]:
+                    idf = self.posting_list[i][0]
+                    q_v.append(query[i] * idf)
+                    d_v.append(0)
+            
+            return q_v, d_v 
+
+        def compute_cosine2(self, q_v, d_v):
+            cos_sim = dot(q_v, d_v) /((norm(q_v)*norm(d_v)))
+            return cos_sim
 
 
         # computing the cosine similarity score, 
@@ -279,12 +370,13 @@ class index:
             query_vector = []
             doc_vector = []
             for index, i in enumerate(self.doc_to_term[docID]):
-                TFIDF = (1+math.log10(self.doc_to_term[docID][i])) * self.posting_list[i][0]
+                TFIDF = (1 + math.log10(self.doc_to_term[docID][i])) * self.posting_list[i][0]
                 doc_vector.append(TFIDF)
 
                 if i in query:
                     TFIDF = (self.posting_list[i][0])
                     query_vector.append(query[i] * TFIDF)
+                    #query_vector.append(query[i])
                 else:
                     query_vector.append(0)
 
@@ -292,6 +384,8 @@ class index:
                 if i not in self.doc_to_term[docID]:
                     TFIDF = (self.posting_list[i][0])
                     query_vector.append(query[i] * (self.posting_list[i][0]))
+                    #query_vector.append(self.posting_list[i][0])
+                    #query_vector.append(query[i])
                     doc_vector.append(0)
 
             # normalize and dot product
@@ -300,7 +394,7 @@ class index:
 
             #score = 1 - spatial.distance.cosine(query_vector, doc_vector)
             #score = np.array(query_vector).dot(np.array(doc_vector))
-            
+             
             score = dot(query_vector, doc_vector)/(norm(query_vector)*norm(doc_vector))
             
             return score 
@@ -330,7 +424,48 @@ class index:
             return final_vector
 
 
-        
+def percision(results, r_docs):
+    tp = list(set(results) & set(r_docs))
+    fp = list(set(results) - set(tp))
+    return len(tp) / (len(tp) + len(fp))
+
+def recall(results, r_docs):
+    tp = list(set(results) & set(r_docs))
+    fn = list(set(r_docs) - set(tp))
+    return len(tp) / (len(tp) + len(fn))
+
+def mean_avg_per(results, r_docs):
+    p = []
+    r_tot = 0
+    for i, v in enumerate(results):
+        if v in r_docs:
+            r_tot += 1
+            p.append(r_tot / (i+1))
+    return sum(p)/(i+1)
+
+def run_rocchio(index, query, round_num, r_docs):
+    query = index.filter_query(query)
+    p = []
+    r = []
+    mean_ap = []
+    
+    
+    for i in range(round_num):
+        docs = index.exact_search(query, len(r_docs))
+        print(docs)
+        p.append(percision(docs, r_docs))
+        r.append(recall(docs, r_docs))
+        mean_ap.append(mean_avg_per(r_docs, docs))
+
+        n_docs = (set(docs) - set(r_docs))
+        print(set(docs), set(r_docs), set(n_docs))
+        vocab, query, weighted_d = index.rocchio(query, r_docs, n_docs)
+    
+    print('Percision: \n {0}'.format(p))
+    print('Recall: \n {0}'.format(r))
+    print('MAP: \n {0}'.format(mean_ap))
+
+
 
 
 
@@ -338,37 +473,11 @@ class index:
 def main():
     path = './TIME/'
     i = index(path)
-    i.buildIndex()
-    
-    for x in i.posting_list:
-        if i.posting_list[x][0] < 0:
-            print(i.posting_list[x])
-    
-    query = ' BACKGROUND OF THE NEW CHANCELLOR OF WEST GERMANY, LUDWIG ERHARD . '
-    query = i.filter_query(query)
-    inp = 'y'
-   
-    while inp == ('y' or 'Y'):
-        docs = i.exact_search(query ,10)
-       
-        # print results
-        for z in docs:
-            print(z, i.doc_to_docID[z[1]])
-   
+    i.build_index2()
+    query = ' KENNEDY ADMINISTRATION PRESSURE ON NGO DINH DIEM TO STOP SUPPRESSING THE BUDDHISTS .'
+    r_docs = [268,288, 304, 308, 323, 326, 334]
+    run_rocchio(i,query, 5, r_docs)
 
-        
-        inp = input('\nWould you like to proceed with Rocchio: (y/n): ')
-        if inp == ('n' or 'N'):
-            print('okay, I guess we are done here :)')
-        elif inp ==('y' or 'Y'):
-            pos_feedback = input('\nEnter relevant document ids separated by space: ').split()
-            neg_feedback = input('\nEnter non relevant document ids seperated bs space: ').split() 
-            vocab, query, weighted_d = i.rocchio(query, pos_feedback, neg_feedback)
-            
-            print('len of weighted dict: {0}'.format(len(weighted_d)))
-        else:
-            print("\nEnter 'y/n' idiot, I didnt give you any other options!")
-            inp = 'y'
 
 
 #    i.print_dict()
