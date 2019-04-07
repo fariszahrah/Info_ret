@@ -179,7 +179,7 @@ class index:
 
 
 
-    def rocchio(self, query, rel_docs, n_docs, alpha=1,beta=0.75, gamma = 0.15):
+    def rocchio(self, query, rel_docs, n_docs, alpha=1,beta=0.75, gamma = 0.25):
         p_vector_sum = [0 for i in range(len(self.vocab))]
         n_vector_sum = [0 for i in range(len(self.vocab))]
         for docId in rel_docs:
@@ -228,7 +228,7 @@ def mapk(predicted, actual):
             p.append(r_tot / (i+1))
     return sum(p)/(i+1)
 
-def runRocchio(index, query, rounds, r_docs, verbose = False, print_V=False):
+def runRocchio(index, query, rounds, r_docs, verbose = False, print_V=False, pseudo = True):
     p = []
     r = []
     mean_ap  = []
@@ -239,11 +239,20 @@ def runRocchio(index, query, rounds, r_docs, verbose = False, print_V=False):
         r.append(round(recall(docs, r_docs),4))
         mean_ap.append(round(mapk(docs, r_docs),4))
         
-        r_docs_in_q = list(set(docs) & set(r_docs))
-        n_docs = (set(docs) - set(r_docs)).copy()
-        if verbose:
-            print('Round {2}:\Relevant docs: {0}\nNonrelevant docs: {1}'.format(r_docs_in_q,n_docs,i+1))
-        query = index.rocchio(query, r_docs_in_q, n_docs)    
+        
+        if not pseudo:
+            r_docs_in_q = list(set(docs) & set(r_docs))
+            n_docs = (set(docs) - set(r_docs)).copy()
+            if verbose:
+                print('Round {2}:\nRelevant docs: {0}\nNonrelevant docs: {1}'.format(r_docs_in_q,n_docs,i+1))
+            query = index.rocchio(query, r_docs_in_q, n_docs)    
+        else:
+            n = int(len(r_docs) / 2)
+            r_docs_in_q = docs[:n]
+            n_docs = docs[n:]
+            if verbose:
+                print('Round {2}:\nRelevant docs: {0}\nNonrelevant docs: {1}'.format(r_docs_in_q,n_docs,i+1))
+            query = index.rocchio(query, r_docs_in_q, n_docs)
         if print_V:
             query_dict = {}
             for i,weight in enumerate(query):
@@ -251,6 +260,8 @@ def runRocchio(index, query, rounds, r_docs, verbose = False, print_V=False):
                     query_dict[index.termId_to_term[i]]=weight
             print(query_dict)
 
+    if verbose:
+        print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
     return p,r,mean_ap 
 
 
@@ -261,44 +272,39 @@ def main():
     i.buildIndex()
     print('Index built in: {0} seconds'.format(time.time() - start_t))
         
-    verbose = False 
+    verbose = True 
     print_V = False
-
+    rounds = 7
     print('\nQuery 46:')
     query = " PRESIDENT DE GAULLE'S POLICY ON BRITISH ENTRY INTO THE COMMON MARKET ."
     query = i.createQueryVector(query)
     r_docs = [1, 20, 23, 32, 39, 47, 53, 54, 80, 93, 151, 157, 174, 202, 272, 291, 294, 348]
-    p,r,mean_ap = runRocchio(i,query,5, r_docs, verbose, print_V)
-    #print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
+    p,r,mean_ap = runRocchio(i,query,rounds, r_docs, verbose, print_V)
 
 
     print('\nQuery 6:')
     query1 = 'CEREMONIAL SUICIDES COMMITTED BY SOME BUDDHIST MONKS IN SOUTH VIET NAM AND WHAT THEY ARE SEEKING TO GAIN BY SUCH ACTS .'
     query1 = i.createQueryVector(query1)
     r1_docs = [257, 268, 288, 304, 308, 323, 324, 326, 334]
-    p,r,mean_ap = runRocchio(i,query1, 5, r1_docs, verbose, print_V)
-    #print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
+    p,r,mean_ap = runRocchio(i,query1, rounds, r1_docs, verbose, print_V)
 
     print('\nQuery 12:')
     query2 = 'OPPOSITION OF INDONESIA TO THE NEWLY-CREATED MALAYSIA .'
     query2 = i.createQueryVector(query2)
     r2_docs = [61, 155, 156, 242, 269, 315, 339, 358]
-    p,r,mean_ap = runRocchio(i ,query2, 5, r2_docs, verbose, print_V)
-    #print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
+    p,r,mean_ap = runRocchio(i ,query2, rounds, r2_docs, verbose, print_V)
 
     print('\nQuery 39:')
     query3 = 'COALITION GOVERNMENT TO BE FORMED IN ITALY BY THE LEFT-WING SOCIALISTS, THE REPUBLICANS, SOCIAL DEMOCRATS, AND CHRISTIAN DEMOCRATS .'
     query3 = i.createQueryVector(query3)
     r3_docs = [22, 73, 173, 189, 219, 265, 277, 360, 396]
-    p,r,mean_ap = runRocchio(i ,query3, 5, r3_docs,verbose, print_V)
-    #print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
+    p,r,mean_ap = runRocchio(i ,query3, rounds, r3_docs,verbose, print_V)
 
     print('\nQuery 69:')
     query4 = ' THE BAATH (RENAISSANCE) PARTY FOUNDED BY MICHEL AFLAK, WHICH HAS GAINED CONTROL OF SYRIA AND IRAQ AND AIMS TO UNITE ALL ARAB COUNTRIES .'
     query4 = i.createQueryVector(query4)
     r4_docs = [70, 100, 115, 121, 139, 159, 194, 210, 224, 234, 309, 379, 388]
-    p,r,mean_ap = runRocchio(i ,query4, 5, r4_docs, verbose, print_V)
-    #print('Percision: {0}\nrecall: {1}\nmap: {2}'.format(p,r,mean_ap))
+    p,r,mean_ap = runRocchio(i ,query4, rounds, r4_docs, verbose, print_V)
 
    
 
