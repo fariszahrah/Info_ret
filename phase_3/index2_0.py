@@ -242,7 +242,7 @@ def runRocchio(index, query, rounds, r_docs, verbose = False, print_V=False):
         r_docs_in_q = list(set(docs) & set(r_docs))
         n_docs = (set(docs) - set(r_docs)).copy()
         if verbose:
-            print('Round {2}:\nRelavant docs: {0}\nNonrelavant docs: {1}'.format(r_docs_in_q,n_docs,i+1))
+            print('Round {2}:\Relevant docs: {0}\nNonrelevant docs: {1}'.format(r_docs_in_q,n_docs,i+1))
         query = index.rocchio(query, r_docs_in_q, n_docs)    
         if print_V:
             query_dict = {}
@@ -260,8 +260,7 @@ def main():
     i = index(path)
     i.buildIndex()
     print('Index built in: {0} seconds'.format(time.time() - start_t))
-    
-    
+        
     verbose = False 
     print_V = False
 
