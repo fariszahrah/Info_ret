@@ -23,3 +23,8 @@ phase2
 phase3
 
 	-- rocchio feedback	
+
+
+phase4
+
+	-- simple pagerank scoring based on a graph
