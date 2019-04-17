@@ -274,37 +274,38 @@ def main():
         
     verbose = True 
     print_V = False
+    pseudo = False
     rounds = 7
-    print('\nQuery 46:')
     query = " PRESIDENT DE GAULLE'S POLICY ON BRITISH ENTRY INTO THE COMMON MARKET ."
+    print('\nQuery 46: {0}'.format(query))
     query = i.createQueryVector(query)
     r_docs = [1, 20, 23, 32, 39, 47, 53, 54, 80, 93, 151, 157, 174, 202, 272, 291, 294, 348]
-    p,r,mean_ap = runRocchio(i,query,rounds, r_docs, verbose, print_V)
+    p,r,mean_ap = runRocchio(i,query,rounds, r_docs, verbose, print_V, pseudo)
 
 
-    print('\nQuery 6:')
     query1 = 'CEREMONIAL SUICIDES COMMITTED BY SOME BUDDHIST MONKS IN SOUTH VIET NAM AND WHAT THEY ARE SEEKING TO GAIN BY SUCH ACTS .'
+    print('\nQuery 6: {0}'.format(query1))
     query1 = i.createQueryVector(query1)
     r1_docs = [257, 268, 288, 304, 308, 323, 324, 326, 334]
-    p,r,mean_ap = runRocchio(i,query1, rounds, r1_docs, verbose, print_V)
+    p,r,mean_ap = runRocchio(i,query1, rounds, r1_docs, verbose, print_V, pseudo)
 
-    print('\nQuery 12:')
     query2 = 'OPPOSITION OF INDONESIA TO THE NEWLY-CREATED MALAYSIA .'
+    print('\nQuery 12: {0}'.format(query2))
     query2 = i.createQueryVector(query2)
     r2_docs = [61, 155, 156, 242, 269, 315, 339, 358]
-    p,r,mean_ap = runRocchio(i ,query2, rounds, r2_docs, verbose, print_V)
+    p,r,mean_ap = runRocchio(i ,query2, rounds, r2_docs, verbose, print_V, pseudo)
 
-    print('\nQuery 39:')
     query3 = 'COALITION GOVERNMENT TO BE FORMED IN ITALY BY THE LEFT-WING SOCIALISTS, THE REPUBLICANS, SOCIAL DEMOCRATS, AND CHRISTIAN DEMOCRATS .'
+    print('\nQuery 39:{0}'.format(query3))
     query3 = i.createQueryVector(query3)
     r3_docs = [22, 73, 173, 189, 219, 265, 277, 360, 396]
-    p,r,mean_ap = runRocchio(i ,query3, rounds, r3_docs,verbose, print_V)
+    p,r,mean_ap = runRocchio(i ,query3, rounds, r3_docs,verbose, print_V, pseudo)
 
-    print('\nQuery 69:')
     query4 = ' THE BAATH (RENAISSANCE) PARTY FOUNDED BY MICHEL AFLAK, WHICH HAS GAINED CONTROL OF SYRIA AND IRAQ AND AIMS TO UNITE ALL ARAB COUNTRIES .'
+    print('\nQuery 69: {0}'.format(query4))
     query4 = i.createQueryVector(query4)
     r4_docs = [70, 100, 115, 121, 139, 159, 194, 210, 224, 234, 309, 379, 388]
-    p,r,mean_ap = runRocchio(i ,query4, rounds, r4_docs, verbose, print_V)
+    p,r,mean_ap = runRocchio(i ,query4, rounds, r4_docs, verbose, print_V, pseudo)
 
    
 
