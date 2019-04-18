@@ -7,13 +7,14 @@ import numpy as np
 import math 
 
 
+
 class pagerank:
 
     def __init__(self, path):
         self.path = path # path to graph
         self.trans = np.array([]) # this will be the final transition matrix
-        self.nodes = int()
-        self.edges = int()
+        self.nodes = int() # number of nodes
+        self.edges = int() # number of edges 
 
     def createMatrix(self, alpha = 0.15):
         with open(self.path) as f:
