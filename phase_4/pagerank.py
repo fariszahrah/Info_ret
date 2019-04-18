@@ -47,7 +47,7 @@ class pagerank:
         new_v = initial_vector @ self.trans 
         err = sum([math.fabs(initial_vector[i]-new_v[i]) for i in range(len(initial_vector))])
         i=0
-        while err > threshold:
+        while err > threshold: # while our values are changing by a value greater than our threshold, continue until convergence smaller than given threshold 
             i+=1
             err = sum([math.fabs((new_v @ self.trans)[i]-new_v[i]) for i in range(len(initial_vector))])
 
